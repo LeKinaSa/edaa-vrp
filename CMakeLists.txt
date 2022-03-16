@@ -7,4 +7,5 @@ include_directories(include)
 add_executable(${PROJECT_NAME}.out
     src/main.cpp
     src/coordinates.cpp
+    src/cvrp.cpp
 )
