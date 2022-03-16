@@ -8,6 +8,8 @@ class Coordinates {
 
         void setLatitude(double latitude);
         void setLongitude(double longitude);
+
+        double haversine(const Coordinates& other) const;
     private:
         double latitude, longitude;
 };
