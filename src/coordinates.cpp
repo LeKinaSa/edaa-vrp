@@ -5,6 +5,8 @@
 
 using namespace std;
 
+Coordinates::Coordinates() : Coordinates(0.0, 0.0) {}
+
 Coordinates::Coordinates(double latitude, double longitude)
     : latitude(latitude), longitude(longitude) {}
 
