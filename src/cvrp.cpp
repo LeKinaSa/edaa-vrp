@@ -1,6 +1,6 @@
 
 #include "cvrp.hpp"
-#include "json.hpp"
+#include <json/json.hpp>
 #include <fstream>
 
 using namespace std;
