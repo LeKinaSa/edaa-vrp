@@ -8,4 +8,7 @@ add_executable(${PROJECT_NAME}.out
     src/main.cpp
     src/coordinates.cpp
     src/cvrp.cpp
+    src/osm/osm.cpp
+
+    lib/tinyxml/tinyxml2.cpp
 )
