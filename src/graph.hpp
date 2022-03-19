@@ -22,7 +22,7 @@ class Graph {
             }
         }
 
-        const T& getNode(u64 id) {
+        const T& getNode(u64 id) const {
             return nodes.at(id);
         }
 
