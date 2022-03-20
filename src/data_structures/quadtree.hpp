@@ -3,6 +3,7 @@
 #define QUADTREE_H
 
 #include "coordinates.hpp"
+#include "types.hpp"
 
 class AABB {
     public:
@@ -14,7 +15,15 @@ class AABB {
 };
 
 class Quadtree {
-    // TODO
+    public:
+        Quadtree(AABB boundary);
+        void insert(std::pair<u64, Coordinates> newPoint);
+    private:
+        void subdivide();    
+
+        std::pair<u64, Coordinates>* point;
+        AABB boundary;
+        Quadtree* nw, * ne, * sw, * se;
 };
 
 #endif // QUADTREE_H
