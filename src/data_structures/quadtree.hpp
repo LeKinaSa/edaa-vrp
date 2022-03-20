@@ -2,8 +2,8 @@
 #ifndef QUADTREE_H
 #define QUADTREE_H
 
-#include "coordinates.hpp"
-#include "types.hpp"
+#include "../coordinates.hpp"
+#include "../types.hpp"
 
 class AABB {
     public:
