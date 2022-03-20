@@ -40,6 +40,20 @@ OsmXmlData parseOsmXml(const char* path) {
 
     const XMLElement* way = root->FirstChildElement("way");
     while (way != nullptr) {
+        bool oneWay = true;
+
+        const XMLElement* tag = way->FirstChildElement("tag");
+        while (tag != nullptr) {
+            if (tag->Attribute("k", "oneway")) {
+                if (tag->Attribute("v", "no")) {
+                    oneWay = false;
+                }
+                break;
+            }
+
+            tag = tag->NextSiblingElement("tag");
+        }
+
         const XMLElement* n1 = way->FirstChildElement("nd");
         const XMLElement* n2 = n1->NextSiblingElement("nd");
 
@@ -52,6 +66,9 @@ OsmXmlData parseOsmXml(const char* path) {
 
             double weight = data1.coordinates.haversine(data2.coordinates);
             data.graph.addEdge(id1, id2, weight);
+            if (!oneWay) {
+                data.graph.addEdge(id2, id1, weight);
+            }
 
             n1 = n2;
             n2 = n2->NextSiblingElement("nd");
