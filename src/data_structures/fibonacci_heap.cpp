@@ -36,5 +36,4 @@ void FibonacciHeap<T>::show() {
         cout << node->key << "\t";
         node = node->next;
     } while (node != min);
-    cout << endl;
 }

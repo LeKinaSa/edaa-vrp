@@ -9,6 +9,9 @@ class AABB {
     public:
         AABB(Coordinates center, double halfSize);
         bool containsPoint(Coordinates coords);
+        void split(AABB* newBoundaries[4]);
+
+        friend std::ostream& operator<<(std::ostream& os, const AABB& obj);
     private:
         Coordinates center;
         double halfSize;
@@ -17,7 +20,9 @@ class AABB {
 class Quadtree {
     public:
         Quadtree(AABB boundary);
-        void insert(std::pair<u64, Coordinates> newPoint);
+        void insert(std::pair<u64, Coordinates>& newPoint);
+        
+        friend std::ostream& operator<<(std::ostream& os, const Quadtree& obj);
     private:
         void subdivide();    
 
