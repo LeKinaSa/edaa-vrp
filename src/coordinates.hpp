@@ -18,6 +18,7 @@ class Coordinates {
         double haversine(const Coordinates& other) const;
 
         friend std::ostream& operator<<(std::ostream& os, const Coordinates& obj);
+        friend Coordinates operator+(const Coordinates& coord1, const Coordinates& coord2);
     private:
         double latitude, longitude;
 };
