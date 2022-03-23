@@ -20,6 +20,7 @@ class FibonacciHeap {
         void insert(T data, double key);
     private:
         FHNode<T>* min = nullptr;
+        FHNode<T>* lastNodeOnRootList = nullptr;
         int size = 0;
 };
 
