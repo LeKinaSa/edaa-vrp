@@ -17,7 +17,29 @@ struct FHNode {
 template <typename T>
 class FibonacciHeap {
     public:
-        void insert(T data, double key);
+        void insert(T data, double key) {
+            FHNode<T>* newNode = new FHNode<T>(data, key);
+            if ((min == nullptr) || (lastNodeOnRootList == nullptr)) {
+                min = newNode;
+                lastNodeOnRootList = newNode;
+                newNode->prev = newNode;
+                newNode->next = newNode;
+            }
+            else {
+                newNode->prev = lastNodeOnRootList;
+                newNode->next = min;
+                min->prev = newNode;
+                lastNodeOnRootList->next = newNode;
+
+                if (newNode->key < min->key) {
+                    min = newNode;
+                }
+                else {
+                    lastNodeOnRootList = newNode;
+                }
+            }
+            ++ size;
+        }
 
         friend std::ostream& operator<<(std::ostream& os, const FibonacciHeap<T>& obj) {
             os << "Size: " << obj.size << std::endl;
