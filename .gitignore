@@ -44,5 +44,6 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
-#VSCode
+# VSCode
 .vscode/*
+build/*
