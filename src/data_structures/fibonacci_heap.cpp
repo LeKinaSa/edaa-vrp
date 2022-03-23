@@ -27,13 +27,3 @@ void FibonacciHeap<T>::insert(T data, double key) {
     }
     ++ size;
 }
-
-template <typename T>
-void FibonacciHeap<T>::show() {
-    cout << "Size: " << size << endl;
-    FHNode<T>* node = min;
-    do {
-        cout << node->key << "\t";
-        node = node->next;
-    } while (node != min);
-}

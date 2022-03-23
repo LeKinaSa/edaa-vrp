@@ -4,8 +4,8 @@
 
 #include <utility>
 #include <list>
-#include "types.hpp"
-#include "graph.hpp"
+#include "../types.hpp"
+#include "../graph.hpp"
 
 template <typename T>
 std::pair<std::list<u64>, double> aStarSearch(Graph<T> g, u64 start, u64 end);
