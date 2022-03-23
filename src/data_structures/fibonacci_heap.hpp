@@ -18,6 +18,7 @@ template <typename T>
 class FibonacciHeap {
     public:
         void insert(T data, double key);
+        void show();
     private:
         FHNode<T>* min = nullptr;
         FHNode<T>* lastNodeOnRootList = nullptr;
