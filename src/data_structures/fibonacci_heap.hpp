@@ -59,9 +59,9 @@ class FibonacciHeap {
             }
         }
 
-        void decreaseKey() {
+        T extractMin();
 
-        }
+        void decreaseKey(FHNode<T>* node, double key);
 
         friend std::ostream& operator<<(std::ostream& os, const FibonacciHeap<T>& obj) {
             os << "Size: " << obj.size << '\n';
