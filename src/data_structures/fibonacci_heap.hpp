@@ -23,7 +23,7 @@ class FibonacciHeap {
             }
         }
 
-        void insert(T data, double key) {
+        FHNode<T>* insert(T data, double key) {
             FHNode<T>* n = new FHNode<T>(data, key);
             n->next = n;
             n->prev = n;
@@ -33,7 +33,7 @@ class FibonacciHeap {
             heap.size = 1;
 
             merge(heap);
-            return;
+            return n;
         }
 
         void merge(FibonacciHeap& other) {
@@ -57,6 +57,10 @@ class FibonacciHeap {
                 other.min = nullptr;
                 other.size = 0;
             }
+        }
+
+        void decreaseKey() {
+
         }
 
         friend std::ostream& operator<<(std::ostream& os, const FibonacciHeap<T>& obj) {
