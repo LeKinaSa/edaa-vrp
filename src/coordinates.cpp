@@ -46,6 +46,6 @@ ostream& operator<<(ostream& os, const Coordinates& obj) {
     return os;
 }
 
-Coordinates operator+(const Coordinates& coord1, const Coordinates& coord2) {
-    return Coordinates(coord1.latitude + coord2.latitude, coord1.longitude + coord2.longitude);
+Coordinates Coordinates::operator+(const Coordinates& obj) {
+    return Coordinates(latitude + obj.latitude, longitude + obj.longitude);
 }

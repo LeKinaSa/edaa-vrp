@@ -13,16 +13,20 @@ bool AABB::containsPoint(Coordinates coords) {
     return distLat <= halfSize && distLong <= halfSize;
 }
 
-void AABB::split(AABB* newBoundaries[4]) {
+array<AABB, 4> AABB::split() {
     double splitSize = halfSize / 2;
-    Coordinates* nw = new Coordinates(+splitSize, -splitSize);
-    Coordinates* ne = new Coordinates(+splitSize, +splitSize);
-    Coordinates* sw = new Coordinates(-splitSize, -splitSize);
-    Coordinates* se = new Coordinates(-splitSize, +splitSize);
-    newBoundaries[0] = new AABB(center + *nw, splitSize);
-    newBoundaries[1] = new AABB(center + *ne, splitSize);
-    newBoundaries[2] = new AABB(center + *sw, splitSize);
-    newBoundaries[3] = new AABB(center + *se, splitSize);
+
+    Coordinates nw(+splitSize, -splitSize),
+            ne(+splitSize, +splitSize),
+            sw(-splitSize, -splitSize),
+            se(-splitSize, +splitSize);
+
+    return {
+        AABB(center + nw, splitSize),
+        AABB(center + ne, splitSize),
+        AABB(center + sw, splitSize),
+        AABB(center + se, splitSize)
+    };
 }
 
 ostream& operator<<(ostream& os, const AABB& obj) {
@@ -30,17 +34,17 @@ ostream& operator<<(ostream& os, const AABB& obj) {
     return os;
 }
 
-Quadtree::Quadtree(AABB boundary) : boundary(boundary), point(nullptr) {
-}
+Quadtree::Quadtree(AABB boundary) : boundary(boundary), point(nullptr) {}
 
-void Quadtree::insert(pair<u64, Coordinates>& newPoint) {
-    if (!(boundary.containsPoint(newPoint.second))) {
+void Quadtree::insert(pair<u64, Coordinates> newPoint) {
+    if (!boundary.containsPoint(newPoint.second)) {
         return;
     }
-    if ((nw == nullptr) && (ne == nullptr) && (sw == nullptr) && (se == nullptr)) {
-        // This is a Leaf
+
+    if (nw == nullptr) {
+        // Leaf node
         if (point == nullptr) {
-            point = &newPoint;
+            point = make_shared<pair<u64, Coordinates>>(newPoint);
             return;
         }
         // Doesn't have space
@@ -54,18 +58,18 @@ void Quadtree::insert(pair<u64, Coordinates>& newPoint) {
 }
 
 void Quadtree::subdivide() {
-    AABB* newBoundaries[4];
-    boundary.split(newBoundaries);
+    array<AABB, 4> newBoundaries = boundary.split();
 
-    nw = new Quadtree(*newBoundaries[0]);
-    ne = new Quadtree(*newBoundaries[1]);
-    sw = new Quadtree(*newBoundaries[2]);
-    se = new Quadtree(*newBoundaries[3]);
+    nw = make_unique<Quadtree>(newBoundaries[0]);
+    ne = make_unique<Quadtree>(newBoundaries[1]);
+    sw = make_unique<Quadtree>(newBoundaries[2]);
+    se = make_unique<Quadtree>(newBoundaries[3]);
 
     nw->insert(*point);
     ne->insert(*point);
     sw->insert(*point);
     se->insert(*point);
+
     point = nullptr;
 }
 
