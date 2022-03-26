@@ -17,9 +17,15 @@ struct FHNode {
 template <typename T>
 class FibonacciHeap {
     public:
+        ~FibonacciHeap() {
+            if (min) {
+                deleteAll(min);
+            }
+        }
+
         void insert(T data, double key) {
             FHNode<T>* newNode = new FHNode<T>(data, key);
-            if ((min == nullptr) || (lastNodeOnRootList == nullptr)) {
+            if (min == nullptr || lastNodeOnRootList == nullptr) {
                 min = newNode;
                 lastNodeOnRootList = newNode;
                 newNode->prev = newNode;
@@ -52,6 +58,18 @@ class FibonacciHeap {
             return os;
         }
     private:
+        void deleteAll(FHNode<T>* node) {
+            if (node) {
+                FHNode<T>* next = node, prev;
+                do {
+                    prev = next;
+                    next = next->next;
+                    deleteAll(prev->child);
+                    delete d;
+                } while (next != node);
+            }
+        }
+
         FHNode<T>* min = nullptr;
         FHNode<T>* lastNodeOnRootList = nullptr;
         int size = 0;
