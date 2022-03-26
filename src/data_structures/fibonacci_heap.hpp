@@ -24,54 +24,65 @@ class FibonacciHeap {
         }
 
         void insert(T data, double key) {
-            FHNode<T>* newNode = new FHNode<T>(data, key);
-            if (min == nullptr || lastNodeOnRootList == nullptr) {
-                min = newNode;
-                lastNodeOnRootList = newNode;
-                newNode->prev = newNode;
-                newNode->next = newNode;
-            }
-            else {
-                newNode->prev = lastNodeOnRootList;
-                newNode->next = min;
-                min->prev = newNode;
-                lastNodeOnRootList->next = newNode;
+            FHNode<T>* n = new FHNode<T>(data, key);
+            n->next = n;
+            n->prev = n;
 
-                if (newNode->key < min->key) {
-                    min = newNode;
+            FibonacciHeap<T> heap;
+            heap.min = n;
+            heap.size = 1;
+
+            merge(heap);
+            return;
+        }
+
+        void merge(FibonacciHeap& other) {
+            if (other.min != nullptr) {
+                if (min != nullptr) {
+                    FHNode<T>* minNext = min->next;
+                    min->next = other.min->next;
+                    min->next->prev = min;
+                    other.min->next = minNext;
+                    other.min->next->prev = other.min;
+
+                    if (other.min->key < min->key) {
+                        min = other.min;
+                    }
                 }
                 else {
-                    lastNodeOnRootList = newNode;
+                    min = other.min;
                 }
+
+                size += other.size;
+                other.min = nullptr;
+                other.size = 0;
             }
-            ++ size;
         }
 
         friend std::ostream& operator<<(std::ostream& os, const FibonacciHeap<T>& obj) {
-            os << "Size: " << obj.size << std::endl;
-            FHNode<T>* node = obj.min;
+            os << "Size: " << obj.size << '\n';
+            const FHNode<T>* node = obj.min;
             do {
-                os << node->key << "\t";
+                os << node->key << '\t';
                 node = node->next;
             } while (node != obj.min);
-            
+
             return os;
         }
     private:
         void deleteAll(FHNode<T>* node) {
             if (node) {
-                FHNode<T>* next = node, prev;
+                FHNode<T>* next = node, * prev;
                 do {
                     prev = next;
                     next = next->next;
                     deleteAll(prev->child);
-                    delete d;
+                    delete prev;
                 } while (next != node);
             }
         }
 
         FHNode<T>* min = nullptr;
-        FHNode<T>* lastNodeOnRootList = nullptr;
         int size = 0;
 };
 
