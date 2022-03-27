@@ -2,13 +2,17 @@
 #ifndef FIBONACCI_HEAP_H
 #define FIBONACCI_HEAP_H
 
+#include <cmath>
+#include <list>
+#include <vector>
+
 template <typename T>
 struct FHNode {
     FHNode(T data, double key) : data(data), key(key) {}
 
     FHNode<T>* prev = nullptr, * next = nullptr, * parent = nullptr,
         * child = nullptr;
-    int degree = 0;
+    u32 degree = 0;
     bool marked = false;
     T data;
     double key;
@@ -59,30 +63,151 @@ class FibonacciHeap {
             }
         }
 
-        T extractMin();
+        T extractMin() {
+            FHNode<T>* ret = min;
+
+            if (ret->child) {
+                // Add children to root list
+                for (FHNode<T>* child : iterate(ret->child)) {
+                    child->prev = min;
+                    child->next = min->next;
+                    min->next->prev = child;
+                    min->next = child;
+
+                    child->parent = nullptr;
+                }
+            }
+
+            removeFromRootList(ret);
+
+            if (ret->next == ret) {
+                // Heap had a single node
+                min = nullptr;
+            }
+            else {
+                min = ret->next;
+                consolidate();
+            }
+
+            // Extract data and free memory
+            size -= 1;
+            T data = ret->data;
+            delete ret;
+            return data;
+        }
 
         void decreaseKey(FHNode<T>* node, double key);
 
         friend std::ostream& operator<<(std::ostream& os, const FibonacciHeap<T>& obj) {
             os << "Size: " << obj.size << '\n';
-            const FHNode<T>* node = obj.min;
-            do {
-                os << node->key << '\t';
-                node = node->next;
-            } while (node != obj.min);
-
+            os << std::string(50, '-') << '\n';
+            obj.printNodes(os, obj.min);
             return os;
         }
     private:
-        void deleteAll(FHNode<T>* node) {
-            if (node) {
-                FHNode<T>* next = node, * prev;
+        void printNodes(std::ostream& os, const FHNode<T>* head, u32 depth = 0) const {
+            for (const FHNode<T>* node : iterate(head)) {
+                os << std::string(depth, '>') << node->key << '\n';
+                if (node->child) {
+                    printNodes(os, node->child, depth + 1);
+                }
+            }
+        }
+
+        void deleteAll(FHNode<T>* head) {
+            for (FHNode<T>* node : iterate(head)) {
+                if (node->child) {
+                    deleteAll(node->child);
+                }
+                delete node;
+            }
+        }
+
+        std::list<FHNode<T>*> iterate(FHNode<T>* head) {
+            std::list<FHNode<T>*> nodes;
+
+            if (head != nullptr) {
+                const FHNode<T>* stop = head;
+
                 do {
-                    prev = next;
-                    next = next->next;
-                    deleteAll(prev->child);
-                    delete prev;
-                } while (next != node);
+                    nodes.push_back(head);
+                    head = head->next;
+                } while (head != stop);
+            }
+
+            return nodes;
+        }
+
+        std::list<const FHNode<T>*> iterate(const FHNode<T>* head) const {
+            std::list<const FHNode<T>*> nodes;
+
+            if (head != nullptr) {
+                const FHNode<T>* stop = head;
+
+                do {
+                    nodes.push_back(head);
+                    head = head->next;
+                } while (head != stop);
+            }
+
+            return nodes;
+        }
+
+        void removeFromRootList(FHNode<T>* node) {
+            if (node) {
+                node->prev->next = node->next;
+                node->next->prev = node->prev;
+            }
+        }
+
+        void addChild(FHNode<T>* node, FHNode<T>* newChild) {
+            if (node && newChild) {
+                if (node->child) {
+                    newChild->prev = node->child;
+                    newChild->next = node->child->next;
+                    node->child->next->prev = newChild;
+                    node->child->next = newChild;
+                }
+                else {
+                    newChild->prev = newChild;
+                    newChild->next = newChild;
+                    node->child = newChild;
+                }
+
+                node->degree += 1;
+                newChild->parent = node;
+                newChild->marked = false;
+            }
+        }
+
+        void consolidate() {
+            std::vector<FHNode<T>*> a(ceil(log2(size)));
+
+            for (FHNode<T>* node : iterate(min)) {
+                u32 d = node->degree;
+                while (a[d]) {
+                    FHNode<T>* lower = node, * higher = a[d];
+                    if (node->key > higher->key) {
+                        lower = higher;
+                        higher = node;
+                    }
+
+                    removeFromRootList(higher);
+                    addChild(lower, higher);
+
+                    a[d] = nullptr;
+                    d += 1;
+                }
+                a[d] = node;
+            }
+
+            // Find new minimum
+            for (FHNode<T>* root : a) {
+                if (root) {
+                    if (root->key < min->key) {
+                        min = root;
+                    }
+                }
             }
         }
 
