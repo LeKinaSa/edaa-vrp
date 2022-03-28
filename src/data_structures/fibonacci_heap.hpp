@@ -6,6 +6,8 @@
 #include <list>
 #include <vector>
 
+#include "../types.hpp"
+
 template <typename T>
 struct FHNode {
     FHNode(T data, double key) : data(data), key(key) {}
@@ -118,14 +120,16 @@ class FibonacciHeap {
 
         friend std::ostream& operator<<(std::ostream& os, const FibonacciHeap<T>& obj) {
             os << "Size: " << obj.size << '\n';
-            os << std::string(50, '-') << '\n';
+            os << std::string(20, '-') << '\n';
             obj.printNodes(os, obj.min);
             return os;
         }
     private:
         void printNodes(std::ostream& os, const FHNode<T>* head, u32 depth = 0) const {
             for (const FHNode<T>* node : iterate(head)) {
-                os << std::string(depth, '>') << node->key << '\n';
+                os << std::string(depth, '>') << node->key;
+                if (node->marked) os << '*';
+                os << '\n';
                 if (node->child) {
                     printNodes(os, node->child, depth + 1);
                 }
@@ -227,6 +231,7 @@ class FibonacciHeap {
                         lower = higher;
                         higher = node;
                     }
+                    node = lower;
 
                     removeFromRootList(higher);
                     addChild(lower, higher);
