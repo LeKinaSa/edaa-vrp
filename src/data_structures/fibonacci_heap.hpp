@@ -29,6 +29,10 @@ class FibonacciHeap {
             }
         }
 
+        bool empty() const {
+            return size == 0;
+        }
+
         FHNode<T>* insert(T data, double key) {
             FHNode<T>* n = new FHNode<T>(data, key);
             n->next = n;
