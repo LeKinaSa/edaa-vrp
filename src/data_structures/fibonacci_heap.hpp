@@ -96,7 +96,25 @@ class FibonacciHeap {
             return data;
         }
 
-        void decreaseKey(FHNode<T>* node, double key);
+        void decreaseKey(FHNode<T>* node, double key) {
+            if (key > node->key) {
+                return;
+            }
+
+            node->key = key;
+
+            FHNode<T>* parent = node->parent;
+            if (parent) {
+                if (node->key < parent->key) {
+                    cut(node);
+                    cascadingCut(parent);
+                }
+            }
+            
+            if (node->key < min->key) {
+                min = node;
+            }
+        }
 
         friend std::ostream& operator<<(std::ostream& os, const FibonacciHeap<T>& obj) {
             os << "Size: " << obj.size << '\n';
@@ -180,6 +198,24 @@ class FibonacciHeap {
             }
         }
 
+        void removeChild(FHNode<T>* child) {
+            FHNode<T>* parent = child->parent;
+
+            if (parent) {
+                if (parent->child == child) {
+                    if (parent->child == parent->child->next) {
+                        // Parent only has one child
+                        parent->child = nullptr;
+                    }
+                    else {
+                        parent->child = child->next;
+                    }
+                }
+                child->prev->next = child->next;
+                child->next->prev = child->prev;
+            }
+        }
+
         void consolidate() {
             std::vector<FHNode<T>*> a(ceil(log2(size)));
 
@@ -207,6 +243,33 @@ class FibonacciHeap {
                     if (root->key < min->key) {
                         min = root;
                     }
+                }
+            }
+        }
+
+        void cut(FHNode<T>* node) {
+            removeChild(node);
+            node->parent->degree -= 1;
+
+            // TODO: Create addToRootList method
+            node->prev = min;
+            node->next = min->next;
+            min->next->prev = node;
+            min->next = node;
+
+            node->marked = false;
+        }
+
+        void cascadingCut(FHNode<T>* node) {
+            FHNode<T>* parent = node->parent;
+
+            if (parent) {
+                if (!node->marked) {
+                    node->marked = true;
+                }
+                else {
+                    cut(node);
+                    cascadingCut(parent);
                 }
             }
         }
