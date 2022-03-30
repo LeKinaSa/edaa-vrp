@@ -15,33 +15,36 @@ std::pair<std::list<u64>, double> aStarSearch(Graph<T> g, u64 start, u64 end) {
     FibonacciHeap<u64> heap;
     std::map<u64, u64> predecessorMap;
     std::map<u64, double> currentCostMap;
-    predecessorMap[0] = 0;
 
     double distance = 0;
     double estimate = 0; // TODO
     currentCostMap[start] = distance;
-    predecessorMap[start] = nullptr;
+    predecessorMap[start] = start;
     heap.insert(start, distance + estimate);
 
+    u64 min, nextNode;
+    double edgeLength;
     std::list<std::pair<u64, double>> edges;
     while (!heap.empty()) {
-        u64 min = heap.extractMin();
+        min = heap.extractMin();
         edges = g.getEdges(min);
         for (std::pair<u64, bool> edge : edges) {
-            u64 nextNode = edge.first;
-            double edgeLength = edge.second;
+            nextNode = edge.first;
+            edgeLength = edge.second;
             distance = currentCostMap[min] + edgeLength;
 
             // Check if the destination node has been reached
             if (nextNode == end) {
                 predecessorMap[nextNode] = min;
-                std::list<u64>* path = new std::list<u64>(end);
+
                 u64 node = end;
+                std::list<u64> path = {end};
                 while (node != start) {
                     node = predecessorMap[node];
-                    path->push_front(node);
+                    path.push_front(node);
                 }
-                return std::make_pair<std::list<u64>, double>(*path, distance);
+
+                return std::make_pair<std::list<u64>, double>(path, distance);
             }
 
             // Update distance and predecessor and add node to the heap (only if the node is new)
