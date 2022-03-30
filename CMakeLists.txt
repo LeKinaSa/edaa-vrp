@@ -3,8 +3,9 @@ cmake_minimum_required(VERSION 3.10)
 project(cvrp)
 
 include_directories(lib)
+add_subdirectory(lib/GraphViewerCpp)
 
-add_executable(${PROJECT_NAME}.out
+add_executable(${PROJECT_NAME}
     src/coordinates.cpp
     src/cvrp.cpp
     src/main.cpp
@@ -13,3 +14,5 @@ add_executable(${PROJECT_NAME}.out
 
     lib/tinyxml/tinyxml2.cpp
 )
+
+target_link_libraries(${PROJECT_NAME} PUBLIC graphviewer)
