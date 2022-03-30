@@ -1,0 +1,3 @@
+[submodule "lib/GraphViewerCpp"]
+	path = lib/GraphViewerCpp
+	url = git@github.com:dmfrodrigues/GraphViewerCpp.git
