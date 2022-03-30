@@ -152,7 +152,7 @@ class FibonacciHeap {
         std::list<FHNode<T>*> iterate(FHNode<T>* head) {
             std::list<FHNode<T>*> nodes;
 
-            if (head != nullptr) {
+            if (head) {
                 const FHNode<T>* stop = head;
 
                 do {
@@ -167,7 +167,7 @@ class FibonacciHeap {
         std::list<const FHNode<T>*> iterate(const FHNode<T>* head) const {
             std::list<const FHNode<T>*> nodes;
 
-            if (head != nullptr) {
+            if (head) {
                 const FHNode<T>* stop = head;
 
                 do {
@@ -225,7 +225,7 @@ class FibonacciHeap {
         }
 
         void consolidate() {
-            std::vector<FHNode<T>*> a(ceil(log2(size)));
+            std::vector<FHNode<T>*> a(ceil(log2(size)), nullptr);
 
             for (FHNode<T>* node : iterate(min)) {
                 u32 d = node->degree;
@@ -249,7 +249,7 @@ class FibonacciHeap {
             // Find new minimum
             for (FHNode<T>* root : a) {
                 if (root) {
-                    if (root->key < min->key) {
+                    if (root->key <= min->key) {
                         min = root;
                     }
                 }
