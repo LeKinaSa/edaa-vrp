@@ -14,8 +14,11 @@ pair<list<u64>, double> aStarSearch(Graph<OsmNode> g, u64 start, u64 end) {
     map<u64, u64> predecessorMap;
     map<u64, double> currentCostMap;
 
+    Coordinates endCoords     = g.getNode(end).coordinates;
+    Coordinates currentCoords = g.getNode(start).coordinates;
+
     double distance = 0;
-    double estimate = 0; // TODO
+    double estimate = currentCoords.haversine(endCoords);
     currentCostMap[start] = distance;
     predecessorMap[start] = start;
     heap.insert(start, distance + estimate);
@@ -24,19 +27,20 @@ pair<list<u64>, double> aStarSearch(Graph<OsmNode> g, u64 start, u64 end) {
     double edgeLength;
     list<pair<u64, double>> edges;
     while (!heap.empty()) {
-        min = heap.extractMin();
+        min   = heap.extractMin();
         edges = g.getEdges(min);
         for (pair<u64, bool> edge : edges) {
-            nextNode = edge.first;
+            nextNode   = edge.first;
             edgeLength = edge.second;
-            distance = currentCostMap[min] + edgeLength;
+            distance   = currentCostMap[min] + edgeLength;
 
             // Check if the destination node has been reached
             if (nextNode == end) {
                 predecessorMap[nextNode] = min;
 
                 u64 node = end;
-                list<u64> path = {end};
+                list<u64> path;
+                path.push_front(node);
                 while (node != start) {
                     node = predecessorMap[node];
                     path.push_front(node);
@@ -47,7 +51,8 @@ pair<list<u64>, double> aStarSearch(Graph<OsmNode> g, u64 start, u64 end) {
 
             // Update distance and predecessor and add node to the heap (only if the node is new)
             if (!currentCostMap.count(nextNode)) {
-                double estimate = 0; // TODO
+                currentCoords = g.getNode(nextNode).coordinates;
+                double estimate = currentCoords.haversine(endCoords);
 
                 currentCostMap[nextNode] = distance;
                 predecessorMap[nextNode] = min;
