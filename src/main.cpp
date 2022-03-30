@@ -34,13 +34,13 @@ void aStarTest() {
     g->addNode(5, n5);
     g->addNode(6, n6);
 
-    g->addEdge(0, 1, 4);
-    g->addEdge(1, 2, 6);
-    g->addEdge(2, 3, 4);
-    g->addEdge(0, 4, 3);
-    g->addEdge(4, 5, 4);
-    g->addEdge(5, 6, 6);
-    g->addEdge(6, 3, 8);
+    g->addEdge(0, 1, 444780);
+    g->addEdge(1, 2, 653228);
+    g->addEdge(2, 3, 460312);
+    g->addEdge(0, 4, 330591);
+    g->addEdge(4, 5, 472546);
+    g->addEdge(5, 6, 680438);
+    g->addEdge(6, 3, 877251);
 
     // Deciding the Start Node
     u64 start = 0;
@@ -48,7 +48,11 @@ void aStarTest() {
     u64 end = 3;
     // A* Search
     pair<list<u64>, double> result = aStarSearch(*g, start, end);
-    cout << result.second << endl;
+    
+    for (auto element : result.first) {
+        cout << element << "\t";
+    }
+    cout << endl << result.second << endl;
 }
 
 int main() {
