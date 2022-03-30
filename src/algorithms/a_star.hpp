@@ -18,7 +18,9 @@ std::pair<std::list<u64>, double> aStarSearch(Graph<T> g, u64 start, u64 end) {
     predecessorMap[0] = 0;
 
     double distance = 0;
-    double estimate = 0;
+    double estimate = 0; // TODO
+    currentCostMap[start] = distance;
+    predecessorMap[start] = nullptr;
     heap.insert(start, distance + estimate);
 
     std::list<std::pair<u64, double>> edges;
