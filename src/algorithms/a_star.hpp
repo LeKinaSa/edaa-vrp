@@ -31,7 +31,7 @@ std::pair<std::list<u64>, double> aStarSearch(Graph<OsmNode> g, u64 start, u64 e
     while (!heap.empty()) {
         min   = heap.extractMin();
         edges = g.getEdges(min);
-        for (std::pair<u64, bool> edge : edges) {
+        for (std::pair<u64, double> edge : edges) {
             nextNode   = edge.first;
             edgeLength = edge.second;
             distance   = currentCostMap[min] + edgeLength;
