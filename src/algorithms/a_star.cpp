@@ -43,7 +43,7 @@ pair<list<u64>, double> aStarSearch(Graph<OsmNode> g, u64 start, u64 end) {
                     path.push_front(node);
                 }
                 std::pair<std::list<u64>, double> p = std::make_pair(path, distance);
-                return p; // TODO: check if this breaks (make_pair was not working)
+                return p;
             }
 
             // Update distance and predecessor and add node to the heap (only if the node is new)
