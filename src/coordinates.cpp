@@ -45,6 +45,12 @@ double Coordinates::distance(const Coordinates& other) const {
     return sqrt(pow(latitude - other.latitude, 2) + pow(longitude - other.longitude, 2));
 }
 
+double Coordinates::squaredEuclideanDistance(const Coordinates& other) const {
+    double dLat = latitude - other.latitude,
+        dLong = longitude - other.longitude;
+    return dLat * dLat + dLong * dLong;
+}
+
 ostream& operator<<(ostream& os, const Coordinates& obj) {
     os << "(" << obj.getLatitude() << ", " << obj.getLongitude() << ")";
     return os;

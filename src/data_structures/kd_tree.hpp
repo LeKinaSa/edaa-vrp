@@ -18,6 +18,8 @@ class KDTree {
         ~KDTree();
 
         bool empty() const;
+        const OsmNode* nearestNeighbor(const Coordinates& queryPoint) const;
+
         friend std::ostream& operator<<(std::ostream& os, const KDTree& obj);
     private:
         struct Node {
@@ -32,6 +34,8 @@ class KDTree {
         void freeNodes(Node* node);
         void printNodes(std::ostream& os, Node* node, u32 depth = 0) const;
         Node* buildTree(PointIterator start, PointIterator end, bool latitude);
+        const Node* findNearest(const Node* root, const Coordinates& queryPoint, u32 depth = 0) const;
+        const Node* nearestPoint(const Node* n1, const Node* n2, const Coordinates& point) const;
 
         static bool compareLatitude(std::reference_wrapper<OsmNode> p1, std::reference_wrapper<OsmNode> p2) {
             return p1.get().coordinates.getLatitude() < p2.get().coordinates.getLatitude();
