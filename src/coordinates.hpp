@@ -17,6 +17,7 @@ class Coordinates {
 
         double haversine(const Coordinates& other) const;
         double distance(const Coordinates& other) const;
+        double squaredEuclideanDistance(const Coordinates& other) const;
 
         friend std::ostream& operator<<(std::ostream& os, const Coordinates& obj);
         Coordinates operator+(const Coordinates& coord2);
