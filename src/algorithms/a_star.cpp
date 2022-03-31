@@ -36,13 +36,13 @@ pair<list<u64>, double> aStarSearch(Graph<OsmNode> g, u64 start, u64 end) {
                 predecessorMap[nextNode] = min;
 
                 u64 node = end;
-                std::list<u64> path;
+                list<u64> path;
                 path.push_front(node);
                 while (node != start) {
                     node = predecessorMap[node];
                     path.push_front(node);
                 }
-                std::pair<std::list<u64>, double> p = std::make_pair(path, distance);
+                pair<list<u64>, double> p = make_pair(path, distance);
                 return p; // TODO: check if this breaks (make_pair was not working)
             }
 
@@ -59,5 +59,5 @@ pair<list<u64>, double> aStarSearch(Graph<OsmNode> g, u64 start, u64 end) {
     }
 
     // Failed to find a path between start and end
-    return make_pair<std::list<u64>, double>({}, 0);
+    return make_pair<list<u64>, double>({}, 0);
 }
