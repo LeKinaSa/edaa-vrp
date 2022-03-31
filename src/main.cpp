@@ -8,46 +8,36 @@ using namespace std;
 
 void aStarTest() {
     // Obtain the Graph to be used in the A* Search
-    Graph<OsmNode>* g = new Graph<OsmNode>();
+    Graph<OsmNode> g;
 
-    Coordinates* c0 = new Coordinates(0  , 0  );
-    Coordinates* c1 = new Coordinates(4  , 0  );
-    Coordinates* c2 = new Coordinates(8.5, 3.8);
-    Coordinates* c3 = new Coordinates(7.3, 7.8);
-    Coordinates* c4 = new Coordinates(1  , 2.8);
-    Coordinates* c5 = new Coordinates(3.8, 6  );
-    Coordinates* c6 = new Coordinates(0  ,10.8);
+    Coordinates c0(0, 0), c1(4, 0), c2(8.5, 3.8), c3(7.3, 7.8),
+            c4(1, 2.8), c5(3.8, 6), c6(0, 10.8);
 
-    OsmNode n0; n0.coordinates = *c0;
-    OsmNode n1; n1.coordinates = *c1;
-    OsmNode n2; n2.coordinates = *c2;
-    OsmNode n3; n3.coordinates = *c3;
-    OsmNode n4; n4.coordinates = *c4;
-    OsmNode n5; n5.coordinates = *c5;
-    OsmNode n6; n6.coordinates = *c6;
+    OsmNode n0 = {c0}, n1 = {c1}, n2 = {c2}, n3 = {c3}, n4 = {c4},
+            n5 = {c5}, n6 = {c6};
 
-    g->addNode(0, n0);
-    g->addNode(1, n1);
-    g->addNode(2, n2);
-    g->addNode(3, n3);
-    g->addNode(4, n4);
-    g->addNode(5, n5);
-    g->addNode(6, n6);
+    g.addNode(0, n0);
+    g.addNode(1, n1);
+    g.addNode(2, n2);
+    g.addNode(3, n3);
+    g.addNode(4, n4);
+    g.addNode(5, n5);
+    g.addNode(6, n6);
 
-    g->addEdge(0, 1, 444780);
-    g->addEdge(1, 2, 653228);
-    g->addEdge(2, 3, 460312);
-    g->addEdge(0, 4, 330591);
-    g->addEdge(4, 5, 472546);
-    g->addEdge(5, 6, 680438);
-    g->addEdge(6, 3, 877251);
+    g.addEdge(0, 1, 44.4780);
+    g.addEdge(1, 2, 65.3228);
+    g.addEdge(2, 3, 46.0312);
+    g.addEdge(0, 4, 33.0591);
+    g.addEdge(4, 5, 47.2546);
+    g.addEdge(5, 6, 68.0438);
+    g.addEdge(6, 3, 87.7251);
 
     // Deciding the Start Node
     u64 start = 0;
     // Deciding the End Node
     u64 end = 3;
     // A* Search
-    pair<list<u64>, double> result = aStarSearch(*g, start, end);
+    pair<list<u64>, double> result = aStarSearch(g, start, end);
     
     for (auto element : result.first) {
         cout << element << "\t";
