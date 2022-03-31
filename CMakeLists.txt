@@ -9,6 +9,7 @@ add_executable(${PROJECT_NAME}
     src/coordinates.cpp
     src/cvrp.cpp
     src/main.cpp
+    src/algorithms/a_star.cpp
     src/data_structures/quadtree.cpp
     src/osm/osm.cpp
 

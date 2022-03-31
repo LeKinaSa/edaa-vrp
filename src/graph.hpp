@@ -29,6 +29,10 @@ class Graph {
         const std::list<std::pair<u64, double>>& getEdges(u64 id) const {
             return adjList.at(id);
         }
+
+        const std::unordered_map<u64, T>& getNodes() const {
+            return nodes;
+        }
     private:
         std::unordered_map<u64, T> nodes;
         std::unordered_map<u64, std::list<std::pair<u64, double>>> adjList;

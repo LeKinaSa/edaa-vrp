@@ -131,7 +131,7 @@ class FibonacciHeap {
     private:
         void printNodes(std::ostream& os, const FHNode<T>* head, u32 depth = 0) const {
             for (const FHNode<T>* node : iterate(head)) {
-                os << std::string(depth, '>') << node->key;
+                os << std::string(depth, '>') << node->key << "\t\t\t" << node->data;
                 if (node->marked) os << '*';
                 os << '\n';
                 if (node->child) {
