@@ -3,6 +3,7 @@
 #include <map>
 #include "a_star.hpp"
 #include "../data_structures/fibonacci_heap.hpp"
+#include "../utils.hpp"
 
 using namespace std;
 
@@ -64,6 +65,16 @@ pair<list<u64>, double> aStarSearch(Graph<OsmNode> g, u64 start, u64 end) {
 
 double NOT_FOUND = -1;
 
+bool contains(std::list<u64> l, u64 value) {
+    // TODO: put in utils
+    for (auto v : l) {
+        if (v == value) {
+            return true;
+        }
+    }
+    return false;
+}
+
 pair<bool, pair<list<u64>, double>> search(Graph<OsmNode> graph, list<u64> path, u64 end, double g, double bound) {
     u64 current = path.back();
     Coordinates endCoords     = graph.getNode(end).coordinates;
@@ -79,11 +90,18 @@ pair<bool, pair<list<u64>, double>> search(Graph<OsmNode> graph, list<u64> path,
     }
 
     pair<bool, pair<list<u64>, double>> found;
+    u64 node;
     double t, min = NOT_FOUND;
+    list<u64> minPath = path;
 
     for (pair<u64, double> edge : graph.getEdges(current)) {
-        path.push_back(edge.first);
-
+        node = edge.first;
+        if (contains(path, node)) {
+            continue;
+        }
+        
+        path.push_back(node);
+        
         found = search(graph, path, end, g + edge.second, bound);
         t = found.second.second;
 
@@ -92,11 +110,12 @@ pair<bool, pair<list<u64>, double>> search(Graph<OsmNode> graph, list<u64> path,
         }
         if (min == NOT_FOUND || (t != NOT_FOUND && t < min)) {
             min = t;
+            minPath = path;
         }
 
         path.pop_back();
     }
-    return make_pair(true, make_pair(path, NOT_FOUND));
+    return make_pair(false, make_pair(minPath, min));
 }
 
 pair<list<u64>, double> iterativeDeepeningAStarSearch(Graph<OsmNode> g, u64 start, u64 end) {
