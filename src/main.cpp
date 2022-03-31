@@ -24,13 +24,13 @@ void aStarTest() {
     g.addNode(5, n5);
     g.addNode(6, n6);
 
-    g.addEdge(0, 1, 44.4780);
-    g.addEdge(1, 2, 65.3228);
-    g.addEdge(2, 3, 46.0312);
-    g.addEdge(0, 4, 33.0591);
-    g.addEdge(4, 5, 47.2546);
-    g.addEdge(5, 6, 68.0438);
-    g.addEdge(6, 3, 87.7251);
+    g.addEdge(0, 1, c0.haversine(c1));
+    g.addEdge(1, 2, c1.haversine(c2));
+    g.addEdge(2, 3, c2.haversine(c3));
+    g.addEdge(0, 4, c0.haversine(c4));
+    g.addEdge(4, 5, c4.haversine(c5));
+    g.addEdge(5, 6, c5.haversine(c6));
+    g.addEdge(6, 3, c6.haversine(c3));
 
     // Deciding the Start Node
     u64 start = 0;
