@@ -14,7 +14,7 @@ class KDTree {
     using PointIterator = PointVector::iterator;
 
     public:
-        KDTree(PointVector& points);
+        explicit KDTree(PointVector& points);
         ~KDTree();
 
         bool empty() const;
