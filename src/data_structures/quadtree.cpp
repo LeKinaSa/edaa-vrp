@@ -6,7 +6,7 @@ using namespace std;
 AABB::AABB(Coordinates center, double halfSize) : center(center),
     halfSize(halfSize) {}
 
-bool AABB::containsPoint(Coordinates coords) {
+bool AABB::containsPoint(const Coordinates& coords) {
     double distLat = abs(coords.getLatitude() - center.getLatitude()),
         distLong = abs(coords.getLongitude() - center.getLongitude());
 
@@ -36,15 +36,15 @@ ostream& operator<<(ostream& os, const AABB& obj) {
 
 Quadtree::Quadtree(AABB boundary) : boundary(boundary), point(nullptr) {}
 
-void Quadtree::insert(pair<u64, Coordinates> newPoint) {
-    if (!boundary.containsPoint(newPoint.second)) {
+void Quadtree::insert(const OsmNode& newPoint) {
+    if (!boundary.containsPoint(newPoint.coordinates)) {
         return;
     }
 
     if (nw == nullptr) {
         // Leaf node
         if (point == nullptr) {
-            point = make_shared<pair<u64, Coordinates>>(newPoint);
+            point = &newPoint;
             return;
         }
         // Doesn't have space
@@ -86,7 +86,7 @@ ostream& operator<<(ostream& os, const Quadtree& obj) {
         os << "null";
     }
     else {
-        os << obj.point->first << " " << obj.point->second;
+        os << obj.point->coordinates;
     }
     os << " -> " << obj.boundary;
 

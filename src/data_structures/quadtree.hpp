@@ -5,11 +5,12 @@
 #include <memory>
 #include "../coordinates.hpp"
 #include "../types.hpp"
+#include "../osm/osm.hpp"
 
 class AABB {
     public:
         AABB(Coordinates center, double halfSize);
-        bool containsPoint(Coordinates coords);
+        bool containsPoint(const Coordinates& coords);
         std::array<AABB, 4> split();
 
         friend std::ostream& operator<<(std::ostream& os, const AABB& obj);
@@ -21,13 +22,14 @@ class AABB {
 class Quadtree {
     public:
         Quadtree(AABB boundary);
-        void insert(std::pair<u64, Coordinates> newPoint);
+        void insert(const OsmNode& newPoint);
+        const OsmNode* nearestNeighbor(const Coordinates& queryPoint) const;
 
         friend std::ostream& operator<<(std::ostream& os, const Quadtree& obj);
     private:
         void subdivide();
 
-        std::shared_ptr<std::pair<u64, Coordinates>> point;
+        const OsmNode* point;
         AABB boundary;
         std::unique_ptr<Quadtree> nw, ne, sw, se;
 };
