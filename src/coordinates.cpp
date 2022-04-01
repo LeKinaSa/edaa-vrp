@@ -41,10 +41,6 @@ double Coordinates::haversine(const Coordinates& other) const {
     return EARTH_RADIUS * 2 * asin(sqrt(a));
 }
 
-double Coordinates::distance(const Coordinates& other) const {
-    return sqrt(pow(latitude - other.latitude, 2) + pow(longitude - other.longitude, 2));
-}
-
 double Coordinates::squaredEuclideanDistance(const Coordinates& other) const {
     double dLat = latitude - other.latitude,
         dLong = longitude - other.longitude;
