@@ -1,5 +1,4 @@
 
-#include <cfloat>
 #include <cmath>
 #include <unordered_set>
 #include "quadtree.hpp"
@@ -9,18 +8,25 @@ using namespace std;
 AABB::AABB(Coordinates topLeft, Coordinates bottomRight) : topLeft(topLeft),
     bottomRight(bottomRight) {}
 
-bool AABB::containsPoint(const Coordinates& coords) const {
-    return coords.getLatitude() >= topLeft.getLatitude() &&
-        coords.getLatitude() <= bottomRight.getLatitude() &&
-        coords.getLongitude() >= topLeft.getLongitude() &&
-        coords.getLongitude() <= bottomRight.getLongitude();
-}
-
 Coordinates AABB::center() const {
     double radiusLat = abs(topLeft.getLatitude() - bottomRight.getLatitude()) / 2,
         radiusLong = abs(topLeft.getLongitude() - bottomRight.getLongitude()) / 2;
 
     return Coordinates(topLeft.getLatitude() + radiusLat, topLeft.getLongitude() + radiusLong);
+}
+
+double AABB::maxDimension() const {
+    return max(
+        abs(topLeft.getLatitude() - bottomRight.getLatitude()),
+        abs(topLeft.getLongitude() - bottomRight.getLongitude())
+    );
+}
+
+bool AABB::containsPoint(const Coordinates& coords) const {
+    return coords.getLatitude() >= topLeft.getLatitude() &&
+        coords.getLatitude() <= bottomRight.getLatitude() &&
+        coords.getLongitude() >= topLeft.getLongitude() &&
+        coords.getLongitude() <= bottomRight.getLongitude();
 }
 
 bool AABB::quadIntersects(const Coordinates& center, double radius) const {
@@ -29,7 +35,7 @@ bool AABB::quadIntersects(const Coordinates& center, double radius) const {
         minLong = topLeft.getLongitude(), maxLong = bottomRight.getLongitude();
 
     return maxLat >= cLat - radius && minLat <= cLat + radius &&
-        maxLong >= cLong - radius && maxLong <= cLong + radius;
+        maxLong >= cLong - radius && minLong <= cLong + radius;
 }
 
 array<AABB, 4> AABB::split() const {
@@ -105,6 +111,7 @@ void Quadtree::subdivide() {
 
 const OsmNode* Quadtree::nearestNeighbor(const Coordinates& queryPoint) const {
     NNResult best;
+    best.distance = 2 * boundary.maxDimension();
     findNearest(queryPoint, best);
     return best.point;
 }
@@ -178,13 +185,16 @@ void Quadtree::findNearest(const Coordinates& queryPoint, NNResult& best) const 
         }
     }
 
-    // Search the most likely child first, then the other three
-    const Quadtree* next = selectQuadrant(queryPoint);
-    findNearest(queryPoint, best);
+    if (nw != nullptr) {
+        // Search the most likely child first, then the other three
+        const Quadtree* next = selectQuadrant(queryPoint);
 
-    for (auto child : {nw, ne, sw, se}) {
-        if (child != next) {
-            findNearest(queryPoint, best);
+        next->findNearest(queryPoint, best);
+
+        for (auto child : {nw, ne, sw, se}) {
+            if (child != next) {
+                child->findNearest(queryPoint, best);
+            }
         }
     }
 }

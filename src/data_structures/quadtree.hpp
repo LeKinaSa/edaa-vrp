@@ -3,6 +3,7 @@
 #define QUADTREE_H
 
 #include <memory>
+#include <cfloat>
 #include "../coordinates.hpp"
 #include "../types.hpp"
 #include "../osm/osm.hpp"
@@ -10,8 +11,9 @@
 class AABB {
     public:
         AABB(Coordinates topLeft, Coordinates bottomRight);
-        bool containsPoint(const Coordinates& coords) const;
         Coordinates center() const;
+        double maxDimension() const;
+        bool containsPoint(const Coordinates& coords) const;
         bool quadIntersects(const Coordinates& center, double radius) const;
         std::array<AABB, 4> split() const;
 
@@ -31,7 +33,7 @@ class Quadtree {
     private:
         struct NNResult {
             const OsmNode* point = nullptr;
-            double distance = DBL_MAX;
+            double distance = 0;
         };
 
         void subdivide();
@@ -40,7 +42,10 @@ class Quadtree {
 
         const OsmNode* point;
         AABB boundary;
-        Quadtree* nw, * ne, * sw, * se;
+        Quadtree* nw = nullptr;
+        Quadtree* ne = nullptr; 
+        Quadtree* sw = nullptr;
+        Quadtree* se = nullptr;
 };
 
 #endif // QUADTREE_H
