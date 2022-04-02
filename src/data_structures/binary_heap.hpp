@@ -13,7 +13,7 @@ class BinaryHeap {
             size_t index = vec.size();
 
             vec.push_back(std::make_pair(data, key));
-            auto ret = vec.back();
+            std::pair<T, double>& ret = vec.back();
             indices[&ret] = index;
 
             heapifyUp(index);
@@ -26,7 +26,7 @@ class BinaryHeap {
             }
 
             std::pair<T, double>* ptr = &vec.front();
-            T root = vec.front();
+            T root = vec.front().first;
             if (vec.size() != 1) {
                 swap(0, vec.size() - 1);
                 vec.pop_back();
@@ -46,6 +46,13 @@ class BinaryHeap {
                 heapifyUp(indices[&node]);
             }
         }
+
+        friend std::ostream& operator<<(std::ostream& os, const BinaryHeap<T>& obj) {
+            for (const auto& n : obj.vec) {
+                os << n.first << "[" << n.second << "]" << " ";
+            }
+            return os;
+        }
     private:
         void swap(size_t a, size_t b) {
             std::swap(vec[a], vec[b]);
@@ -54,7 +61,7 @@ class BinaryHeap {
         }
 
         void heapifyUp(size_t index) {
-            while (index > 0 && vec[index] < vec[parent(index)]) {
+            while (index > 0 && vec[index].second < vec[parent(index)].second) {
                 swap(index, parent(index));
                 index = parent(index);
             }
@@ -65,13 +72,13 @@ class BinaryHeap {
             size_t min = index;
 
             if (left < size) {
-                if (vec[left] < vec[min]) {
+                if (vec[left].second < vec[min].second) {
                     min = left;
                 }
             }
 
             if (right < size) {
-                if (vec[right] < vec[min]) {
+                if (vec[right].second < vec[min].second) {
                     min = right;
                 }
             }
