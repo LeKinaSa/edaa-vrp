@@ -118,7 +118,7 @@ class FibonacciHeap {
         }
 
         void decreaseKey(FHNode<T>* node, double key) {
-            if (key > node->key) {
+            if (key >= node->key) {
                 return;
             }
 
@@ -281,6 +281,7 @@ class FibonacciHeap {
             min->next->prev = node;
             min->next = node;
 
+            node->parent = nullptr;
             node->marked = false;
         }
 

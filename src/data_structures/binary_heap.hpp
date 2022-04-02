@@ -9,12 +9,12 @@
 template <typename T>
 class BinaryHeap {
     public:
-        std::pair<T, double>& insert(T data, double key) {
+        std::pair<T, double>* insert(T data, double key) {
             size_t index = vec.size();
 
             vec.push_back(std::make_pair(data, key));
-            std::pair<T, double>& ret = vec.back();
-            indices[&ret] = index;
+            std::pair<T, double>* ret = &vec.back();
+            indices[ret] = index;
 
             heapifyUp(index);
             return ret;
@@ -40,10 +40,12 @@ class BinaryHeap {
             return root;
         }
 
-        void decreaseKey(std::pair<T, double>& node, double key) {
-            if (key < node.second) {
-                node.second = key;
-                heapifyUp(indices[&node]);
+        void decreaseKey(std::pair<T, double>* node, double key) {
+            if (node) {
+                if (key < node->second) {
+                    node->second = key;
+                    heapifyUp(indices[node]);
+                }
             }
         }
 
@@ -55,7 +57,9 @@ class BinaryHeap {
         }
     private:
         void swap(size_t a, size_t b) {
-            std::swap(vec[a], vec[b]);
+            auto temp = vec[a];
+            vec[a] = vec[b];
+            vec[b] = vec[a];
             indices[&vec[a]] = b;
             indices[&vec[b]] = a;
         }

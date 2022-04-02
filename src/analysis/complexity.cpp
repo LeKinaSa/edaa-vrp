@@ -7,6 +7,7 @@
 #include "complexity.hpp"
 #include "../data_structures/kd_tree.hpp"
 #include "../data_structures/quadtree.hpp"
+#include "../data_structures/binary_heap.hpp"
 #include "../data_structures/fibonacci_heap.hpp"
 
 using namespace std;
@@ -106,33 +107,46 @@ void kdTreeQuadtreeComplexityAnalysis(u32 seed) {
     }
 }
 
-void fibonacciHeapComplexityAnalysis(u32 seed) {
-    static const size_t size = 9;
+void heapComplexityAnalysis(u32 seed) {
+    static const size_t size = 8;
     static const double minKey = 0, maxKey = 500;
-    static const array<u32, size> numNodes = {1000, 5000, 10000,
-        50000, 100000, 500000, 1000000, 5000000, 10000000};
+    static const array<u32, size> numNodes = {1000 , 5000, 10000,
+        50000, 100000, 500000, 1000000, 5000000};
     static const u32 insertIters = 100, extractMinIters = 100,
         decreaseKeyIters = 250;
 
     srand(seed);
+    random_device rd;
+    default_random_engine eng(rd());
+    uniform_real_distribution<double> randDist(minKey, maxKey);
 
-    array<u64, size> insert = {}, extractMin = {}, decreaseKey = {};
+    array<u64, size> insertBin = {}, extractMinBin = {}, decreaseKeyBin = {},
+        insertFib = {}, extractMinFib = {}, decreaseKeyFib = {};
 
     u32 current = 0;
     {
-        FibonacciHeap<bool> heap;
+        BinaryHeap<bool> binHeap;
+        FibonacciHeap<bool> fibHeap;
         for (u32 i = 0; i <= *numNodes.rbegin(); ++i) {
-            auto start = high_resolution_clock::now();
-            heap.insert(true, randomDouble(minKey, maxKey));
-            auto end = high_resolution_clock::now();
+            double key = randomDouble(minKey, maxKey);
+            
+            auto startBin = high_resolution_clock::now();
+            binHeap.insert(true, key);
+            auto endBin = high_resolution_clock::now();
+
+            auto startFib = high_resolution_clock::now();
+            fibHeap.insert(true, key);
+            auto endFib = high_resolution_clock::now();
 
             if (i < numNodes[current]) {
                 if (i >= numNodes[current] - insertIters) {
-                    insert[current] += interval<nanoseconds>(start, end);
+                    insertBin[current] += interval<nanoseconds>(startBin, endBin);
+                    insertFib[current] += interval<nanoseconds>(startFib, endFib);
                 }
             }
             else {
-                insert[current] /= insertIters;
+                insertBin[current] /= insertIters;
+                insertFib[current] /= insertIters;
                 ++current;
             }
         }
@@ -140,21 +154,32 @@ void fibonacciHeapComplexityAnalysis(u32 seed) {
 
     current = 0;
     {
-        FibonacciHeap<bool> heap;
+        BinaryHeap<bool> binHeap;
+        FibonacciHeap<bool> fibHeap;
         for (u32 i = 0; i <= *numNodes.rbegin(); ++i) {
-            heap.insert(true, randomDouble(minKey, maxKey));
+            double key = randomDouble(minKey, maxKey);
+            binHeap.insert(true, key);
+            fibHeap.insert(true, key);
 
             if (i == numNodes[current]) {
                 for (u32 _ = 0; _ < extractMinIters; ++_) {
                     auto start = high_resolution_clock::now();
-                    heap.extractMin();
+                    binHeap.extractMin();
                     auto end = high_resolution_clock::now();
-                    extractMin[current] += interval<microseconds>(start, end);
+                    extractMinBin[current] += interval<microseconds>(start, end);
+
+                    start = high_resolution_clock::now();
+                    fibHeap.extractMin();
+                    end = high_resolution_clock::now();
+                    extractMinFib[current] += interval<microseconds>(start, end);
                 }
-                extractMin[current] /= extractMinIters;
+                extractMinBin[current] /= extractMinIters;
+                extractMinFib[current] /= extractMinIters;
 
                 for (u32 _ = 0; _ < extractMinIters; ++_) {
-                    heap.insert(true, randomDouble(minKey, maxKey));
+                    double key = randomDouble(minKey, maxKey);
+                    binHeap.insert(true, key);
+                    fibHeap.insert(true, key);
                 }
                 ++current;
             }
@@ -163,22 +188,37 @@ void fibonacciHeapComplexityAnalysis(u32 seed) {
 
     current = 0;
     {
-        FibonacciHeap<bool> heap;
-        vector<FHNode<bool>*> v;
-        v.reserve(*numNodes.rbegin() + 1);
+        BinaryHeap<bool> binHeap;
+        vector<pair<bool, double>*> vBin;
+        vBin.reserve(*numNodes.rbegin());
+        
+        FibonacciHeap<bool> fibHeap;
+        vector<FHNode<bool>*> vFib;
+        vFib.reserve(*numNodes.rbegin());
 
-        for (u32 i = 0; i <= *numNodes.rbegin(); ++i) {
-            v.push_back(heap.insert(true, randomDouble(minKey, maxKey)));
+        for (u32 i = 0; i < *numNodes.rbegin(); ++i) {
+            double key = randomDouble(minKey, maxKey);
+            vBin.push_back(binHeap.insert(true, key));
+            vFib.push_back(fibHeap.insert(true, key));
 
-            if (i == numNodes[current]) {
+            if (i == numNodes[current] - 1) {
                 for (u32 _ = 0; _ < decreaseKeyIters; ++_) {
-                    FHNode<bool>* node = v[rand() % v.size()];
+                    size_t idx = rand() % vBin.size();
+                    uniform_real_distribution<double> tempDist(minKey, vBin[idx]->second);
+                    double newKey = tempDist(eng);
+
                     auto start = high_resolution_clock::now();
-                    heap.decreaseKey(node, randomDouble(minKey, node->key));
+                    binHeap.decreaseKey(vBin[idx], newKey);
                     auto end = high_resolution_clock::now();
-                    decreaseKey[current] += interval<nanoseconds>(start, end);
+                    decreaseKeyBin[current] += interval<nanoseconds>(start, end);
+
+                    start = high_resolution_clock::now();
+                    fibHeap.decreaseKey(vFib[idx], newKey);
+                    end = high_resolution_clock::now();
+                    decreaseKeyFib[current] += interval<nanoseconds>(start, end);
                 }
-                decreaseKey[current] /= decreaseKeyIters;
+                decreaseKeyBin[current] /= decreaseKeyIters;
+                decreaseKeyFib[current] /= decreaseKeyIters;
                 ++current;
             }
         }
@@ -186,25 +226,31 @@ void fibonacciHeapComplexityAnalysis(u32 seed) {
 
     cout << "Insertion - O(1)\n";
     cout << string(50, '-') << "\n";
-    cout << setw(10) << "Nodes" << " | Time (ns)\n";
+    cout << setw(10) << "Nodes" << " | " << setw(10) << "Bin (ns)" << " | "
+        << setw(10) << "Fib (ns)" << "\n";
 
     for (u32 i = 0; i < numNodes.size(); ++i) {
-        cout << setw(10) << numNodes[i] << " | " << insert[i] << "\n";
+        cout << setw(10) << numNodes[i] << " | " << setw(10) << insertBin[i] 
+            << " | " << setw(10) << insertFib[i] << "\n";
     }
 
     cout << "\nExtract Min - O(log n)\n";
     cout << string(50, '-') << "\n";
-    cout << setw(10) << "Nodes" << " | Time (us)\n";
+    cout << setw(10) << "Nodes" << " | " << setw(10) << "Bin (ns)" << " | "
+        << setw(10) << "Fib (ns)" << "\n";
 
     for (u32 i = 0; i < numNodes.size(); ++i) {
-        cout << setw(10) << numNodes[i] << " | " << extractMin[i] << "\n";
+        cout << setw(10) << numNodes[i] << " | " << setw(10) << extractMinBin[i] 
+            << " | " << setw(10) << extractMinFib[i] << "\n";
     }
 
-    cout << "\nDecrease Key - O(1)\n";
+    cout << "\nDecrease Key - O(log n) [Bin], O(1) [Fib]\n";
     cout << string(50, '-') << "\n";
-    cout << setw(10) << "Nodes" << " | Time (ns)\n";
+    cout << setw(10) << "Nodes" << " | " << setw(10) << "Bin (ns)" << " | "
+        << setw(10) << "Fib (ns)" << "\n";
 
     for (u32 i = 0; i < numNodes.size(); ++i) {
-        cout << setw(10) << numNodes[i] << " | " << decreaseKey[i] << "\n";
+        cout << setw(10) << numNodes[i] << " | " << setw(10) << decreaseKeyBin[i] 
+            << " | " << setw(10) << decreaseKeyFib[i] << "\n";
     }
 }
