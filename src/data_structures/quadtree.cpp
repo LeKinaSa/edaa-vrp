@@ -1,42 +1,70 @@
 
-#include <stack>
 #include <cfloat>
+#include <cmath>
+#include <unordered_set>
 #include "quadtree.hpp"
 
 using namespace std;
 
-AABB::AABB(Coordinates center, double halfSize) : center(center),
-    halfSize(halfSize) {}
+AABB::AABB(Coordinates topLeft, Coordinates bottomRight) : topLeft(topLeft),
+    bottomRight(bottomRight) {}
 
 bool AABB::containsPoint(const Coordinates& coords) const {
-    double distLat = abs(coords.getLatitude() - center.getLatitude()),
-        distLong = abs(coords.getLongitude() - center.getLongitude());
-
-    return distLat <= halfSize && distLong <= halfSize;
+    return coords.getLatitude() >= topLeft.getLatitude() &&
+        coords.getLatitude() <= bottomRight.getLatitude() &&
+        coords.getLongitude() >= topLeft.getLongitude() &&
+        coords.getLongitude() <= bottomRight.getLongitude();
 }
 
-array<AABB, 4> AABB::split() {
-    double splitSize = halfSize / 2;
+Coordinates AABB::center() const {
+    double radiusLat = abs(topLeft.getLatitude() - bottomRight.getLatitude()) / 2,
+        radiusLong = abs(topLeft.getLongitude() - bottomRight.getLongitude()) / 2;
 
-    Coordinates nw(+splitSize, -splitSize),
-            ne(+splitSize, +splitSize),
-            sw(-splitSize, -splitSize),
-            se(-splitSize, +splitSize);
+    return Coordinates(topLeft.getLatitude() + radiusLat, topLeft.getLongitude() + radiusLong);
+}
+
+bool AABB::quadIntersects(const Coordinates& center, double radius) const {
+    double cLat = center.getLatitude(), cLong = center.getLongitude(),
+        minLat = topLeft.getLatitude(), maxLat = bottomRight.getLatitude(),
+        minLong = topLeft.getLongitude(), maxLong = bottomRight.getLongitude();
+
+    return maxLat >= cLat - radius && minLat <= cLat + radius &&
+        maxLong >= cLong - radius && maxLong <= cLong + radius;
+}
+
+array<AABB, 4> AABB::split() const {
+    double tLat = topLeft.getLatitude(), tLong = topLeft.getLongitude(),
+        bLat = bottomRight.getLatitude(), bLong = bottomRight.getLongitude();
+
+    double deltaLat = abs(tLat - bLat), deltaLong = abs(tLong - bLong);
+
+    Coordinates topMid(tLat + deltaLat / 2, tLong),
+            midLeft(tLat, tLong + deltaLong / 2),
+            center(tLat + deltaLat / 2, tLong + deltaLong / 2),
+            midRight(tLat + deltaLat, tLong + deltaLong / 2),
+            bottomMid(tLat + deltaLat / 2, tLong + deltaLong);
 
     return {
-        AABB(center + nw, splitSize),
-        AABB(center + ne, splitSize),
-        AABB(center + sw, splitSize),
-        AABB(center + se, splitSize)
+        AABB(topLeft, center),
+        AABB(topMid, midRight),
+        AABB(midLeft, bottomMid),
+        AABB(center, bottomRight)
     };
 }
 
 ostream& operator<<(ostream& os, const AABB& obj) {
-    os << obj.center << " - " << obj.halfSize;
+    os << obj.topLeft << " - " << obj.bottomRight;
     return os;
 }
 
 Quadtree::Quadtree(AABB boundary) : boundary(boundary), point(nullptr) {}
+
+Quadtree::~Quadtree() {
+    delete nw;
+    delete ne;
+    delete sw;
+    delete se;
+}
 
 void Quadtree::insert(const OsmNode& newPoint) {
     if (!boundary.containsPoint(newPoint.coordinates)) {
@@ -62,10 +90,10 @@ void Quadtree::insert(const OsmNode& newPoint) {
 void Quadtree::subdivide() {
     array<AABB, 4> newBoundaries = boundary.split();
 
-    nw = make_unique<Quadtree>(newBoundaries[0]);
-    ne = make_unique<Quadtree>(newBoundaries[1]);
-    sw = make_unique<Quadtree>(newBoundaries[2]);
-    se = make_unique<Quadtree>(newBoundaries[3]);
+    nw = new Quadtree(newBoundaries[0]);
+    ne = new Quadtree(newBoundaries[1]);
+    sw = new Quadtree(newBoundaries[2]);
+    se = new Quadtree(newBoundaries[3]);
 
     nw->insert(*point);
     ne->insert(*point);
@@ -76,19 +104,9 @@ void Quadtree::subdivide() {
 }
 
 const OsmNode* Quadtree::nearestNeighbor(const Coordinates& queryPoint) const {
-    stack<const Quadtree*> s;
-    double minDistance = DBL_MAX;
-    const OsmNode* nearest = this->point;
-
-    s.push(this);
-
-    while (!s.empty()) {
-        const Quadtree* next = s.top(); s.pop();
-
-        if (next->nw) {
-            
-        }
-    }
+    NNResult best;
+    findNearest(queryPoint, best);
+    return best.point;
 }
 
 ostream& operator<<(ostream& os, const Quadtree& obj) {
@@ -119,20 +137,54 @@ ostream& operator<<(ostream& os, const Quadtree& obj) {
     return os;
 }
 
-const Quadtree* Quadtree::selectQuadrant(const Coordinates& queryPoint) {
+const Quadtree* Quadtree::selectQuadrant(const Coordinates& queryPoint) const {
     if (nw == nullptr) {
         return this;
     }
 
-    
-}
+    Coordinates center = boundary.center();
 
-const OsmNode* Quadtree::findNearest(const Coordinates& queryPoint,
-        const OsmNode* best = nullptr, double radius = DBL_MAX) const {
-    if (best == nullptr) {
-        // Haven't found a point yet, recurse into the tree
-        
+    if (queryPoint.getLatitude() <= center.getLatitude()) {
+        if (queryPoint.getLongitude() <= center.getLongitude())
+            return nw;
+        else
+            return sw;
+    }
+    else {
+        if (queryPoint.getLongitude() <= center.getLongitude())
+            return ne;
+        else
+            return se;
     }
 
-    return best;
+    // Should never be reached
+    return nullptr;
+}
+
+void Quadtree::findNearest(const Coordinates& queryPoint, NNResult& best) const {
+    if (point == nullptr && nw == nullptr) {
+        return;
+    }
+
+    if (!boundary.quadIntersects(queryPoint, best.distance)) {
+        return;
+    }
+
+    if (point) {
+        double distance = queryPoint.euclideanDistance(point->coordinates);
+        if (distance < best.distance) {
+            best.point = point;
+            best.distance = distance;
+        }
+    }
+
+    // Search the most likely child first, then the other three
+    const Quadtree* next = selectQuadrant(queryPoint);
+    findNearest(queryPoint, best);
+
+    for (auto child : {nw, ne, sw, se}) {
+        if (child != next) {
+            findNearest(queryPoint, best);
+        }
+    }
 }
