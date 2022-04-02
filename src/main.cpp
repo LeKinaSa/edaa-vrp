@@ -36,8 +36,22 @@ void aStarTest() {
     u64 start = 0;
     // Deciding the End Node
     u64 end = 3;
+
+    // Search
+    pair<list<u64>, double> result;
+
     // A* Search
-    pair<list<u64>, double> result = aStarSearch(g, start, end);
+    cout << endl << "A* Search" << endl;
+    result = aStarSearch(g, start, end);
+    
+    for (auto element : result.first) {
+        cout << element << "\t";
+    }
+    cout << endl << result.second << endl;
+
+    // Iterative Deepening A* Search
+    cout << endl << "Iterative Deepening A* Search" << endl;
+    result = iterativeDeepeningAStarSearch(g, start, end);
     
     for (auto element : result.first) {
         cout << element << "\t";

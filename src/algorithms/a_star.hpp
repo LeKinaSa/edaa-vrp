@@ -10,4 +10,6 @@
 
 std::pair<std::list<u64>, double> aStarSearch(Graph<OsmNode> g, u64 start, u64 end);
 
+std::pair<std::list<u64>, double> iterativeDeepeningAStarSearch(Graph<OsmNode> g, u64 start, u64 end);
+
 #endif // A_STAR_H
