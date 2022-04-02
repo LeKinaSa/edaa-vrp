@@ -2,11 +2,12 @@
 #include <array>
 #include <chrono>
 #include <iostream>
+#include <iomanip>
 #include <random>
 #include "complexity.hpp"
-#include "../types.hpp"
 #include "../data_structures/kd_tree.hpp"
 #include "../data_structures/quadtree.hpp"
+#include "../data_structures/fibonacci_heap.hpp"
 
 using namespace std;
 using chrono::high_resolution_clock;
@@ -24,14 +25,16 @@ inline u64 interval(const high_resolution_clock::time_point& start,
     return duration_cast<T>(end - start).count();
 }
 
-void kdTreeQuadtreeComplexityAnalysis(unsigned int seed) {
+void kdTreeQuadtreeComplexityAnalysis(u32 seed) {
+    static const size_t size = 10;
+    static const double minC = -75, maxC = 75;
+    static const array<u32, size> numPoints = {100, 500, 1000, 2500, 5000, 10000,
+        50000, 100000, 500000, 1000000};
+    static const u32 nnIterations = 10000;
+
     srand(seed);
 
-    const array<u32, 10> numPoints = {100, 500, 1000, 2500, 5000, 10000,
-        50000, 100000, 500000, 1000000};
-    const double minC = -75, maxC = 75;
-    const u32 nnIterations = 10000;
-    array<i64, 10> constructionKDTree = {}, constructionQuadtree = {},
+    array<i64, size> constructionKDTree = {}, constructionQuadtree = {},
         nnKDTree = {}, nnQuadtree = {};
 
     for (u32 i = 0; i < numPoints.size(); ++i) {
@@ -100,5 +103,108 @@ void kdTreeQuadtreeComplexityAnalysis(unsigned int seed) {
     for (u32 i = 0; i < numPoints.size(); ++i) {
         cout << numPoints[i] << "\t|" << nnKDTree[i] << "\t\t|"
             << nnQuadtree[i] << "\n";
+    }
+}
+
+void fibonacciHeapComplexityAnalysis(u32 seed) {
+    static const size_t size = 9;
+    static const double minKey = 0, maxKey = 500;
+    static const array<u32, size> numNodes = {1000, 5000, 10000,
+        50000, 100000, 500000, 1000000, 5000000, 10000000};
+    static const u32 insertIters = 100, extractMinIters = 100,
+        decreaseKeyIters = 250;
+
+    srand(seed);
+
+    array<u64, size> insert = {}, extractMin = {}, decreaseKey = {};
+
+    u32 current = 0;
+    {
+        FibonacciHeap<bool> heap;
+        for (u32 i = 0; i <= *numNodes.rbegin(); ++i) {
+            auto start = high_resolution_clock::now();
+            heap.insert(true, randomDouble(minKey, maxKey));
+            auto end = high_resolution_clock::now();
+
+            if (i < numNodes[current]) {
+                if (i >= numNodes[current] - insertIters) {
+                    insert[current] += interval<nanoseconds>(start, end);
+                }
+            }
+            else {
+                insert[current] /= insertIters;
+                ++current;
+            }
+        }
+    }
+
+    current = 0;
+    {
+        FibonacciHeap<bool> heap;
+        for (u32 i = 0; i <= *numNodes.rbegin(); ++i) {
+            heap.insert(true, randomDouble(minKey, maxKey));
+
+            if (i == numNodes[current]) {
+                for (u32 _ = 0; _ < extractMinIters; ++_) {
+                    auto start = high_resolution_clock::now();
+                    heap.extractMin();
+                    auto end = high_resolution_clock::now();
+                    extractMin[current] += interval<microseconds>(start, end);
+                }
+                extractMin[current] /= extractMinIters;
+
+                for (u32 _ = 0; _ < extractMinIters; ++_) {
+                    heap.insert(true, randomDouble(minKey, maxKey));
+                }
+                ++current;
+            }
+        }
+    }
+
+    current = 0;
+    {
+        FibonacciHeap<bool> heap;
+        vector<FHNode<bool>*> v;
+        v.reserve(*numNodes.rbegin() + 1);
+
+        for (u32 i = 0; i <= *numNodes.rbegin(); ++i) {
+            v.push_back(heap.insert(true, randomDouble(minKey, maxKey)));
+
+            if (i == numNodes[current]) {
+                for (u32 _ = 0; _ < decreaseKeyIters; ++_) {
+                    FHNode<bool>* node = v[rand() % v.size()];
+                    auto start = high_resolution_clock::now();
+                    heap.decreaseKey(node, randomDouble(minKey, node->key));
+                    auto end = high_resolution_clock::now();
+                    decreaseKey[current] += interval<nanoseconds>(start, end);
+                }
+                decreaseKey[current] /= decreaseKeyIters;
+                ++current;
+            }
+        }
+    }
+
+    cout << "Insertion - O(1)\n";
+    cout << string(50, '-') << "\n";
+    cout << setw(10) << "Nodes" << " | Time (ns)\n";
+
+    for (u32 i = 0; i < numNodes.size(); ++i) {
+        cout << setw(10) << numNodes[i] << " | " << insert[i] << "\n";
+    }
+
+    cout << "\nExtract Min - O(log n)\n";
+    cout << string(50, '-') << "\n";
+    cout << setw(10) << "Nodes" << " | Time (us)\n";
+
+    for (u32 i = 0; i < numNodes.size(); ++i) {
+        cout << setw(10) << numNodes[i] << " | " << extractMin[i] << "\n";
+    }
+
+    cout << "\nDecrease Key - O(1)\n";
+    cout << string(50, '-') << "\n";
+    cout << setw(10) << "Nodes" << " | Time (ns)\n";
+
+    for (u32 i = 0; i < numNodes.size(); ++i) {
+        cout << setw(10) << numNodes[i] << " | " << decreaseKey[i] << "\n";
     }
 }

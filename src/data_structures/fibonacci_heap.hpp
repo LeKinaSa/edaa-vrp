@@ -284,7 +284,7 @@ class FibonacciHeap {
         }
 
         FHNode<T>* min = nullptr;
-        int size = 0;
+        u32 size = 0;
 };
 
 #endif // FIBONACCI_HEAP_H
