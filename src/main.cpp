@@ -6,8 +6,7 @@
 
 using namespace std;
 
-void aStarTest() {
-    // Obtain the Graph to be used in the A* Search
+Graph<OsmNode> getGraph() {
     Graph<OsmNode> g;
 
     Coordinates c0(0, 0), c1(4, 0), c2(8.5, 3.8), c3(7.3, 7.8),
@@ -32,12 +31,42 @@ void aStarTest() {
     g.addEdge(5, 6, c5.haversine(c6));
     g.addEdge(6, 3, c6.haversine(c3));
 
+    return g;
+}
+
+void aStarTest() {
+    // Obtain the Graph to be used in the A* Search
+    Graph<OsmNode> g = getGraph();
+
     // Deciding the Start Node
     u64 start = 0;
     // Deciding the End Node
     u64 end = 3;
+
+    // Search
+    pair<list<u64>, double> result;
+
     // A* Search
-    pair<list<u64>, double> result = aStarSearch(g, start, end);
+    cout << endl << "A* Search" << endl;
+    result = aStarSearch(g, start, end);
+    
+    for (auto element : result.first) {
+        cout << element << "\t";
+    }
+    cout << endl << result.second << endl;
+
+    // Iterative Deepening A* Search
+    cout << endl << "Iterative Deepening A* Search" << endl;
+    result = iterativeDeepeningAStarSearch(g, start, end);
+    
+    for (auto element : result.first) {
+        cout << element << "\t";
+    }
+    cout << endl << result.second << endl;
+
+    // Simplified Memory Bound A* Search
+    cout << endl << "Simplified Memory Bound A* Search" << endl;
+    result = simpleMemoryBoundedAStarSearch(g, start, end, 2);
     
     for (auto element : result.first) {
         cout << element << "\t";

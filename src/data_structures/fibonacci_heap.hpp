@@ -33,6 +33,10 @@ class FibonacciHeap {
             return size == 0;
         }
 
+        int getSize() const {
+            return size;
+        }
+
         FHNode<T>* insert(T data, double key) {
             FHNode<T>* n = new FHNode<T>(data, key);
             n->next = n;
@@ -100,6 +104,17 @@ class FibonacciHeap {
             T data = ret->data;
             delete ret;
             return data;
+        }
+
+        T extractMax() {
+            // Find max
+            FHNode<T>* max = getMax(min);
+
+            // Change the key to -1
+            decreaseKey(max, -1);
+
+            // Extract min
+            return extractMin();
         }
 
         void decreaseKey(FHNode<T>* node, double key) {
@@ -281,6 +296,25 @@ class FibonacciHeap {
                     cascadingCut(parent);
                 }
             }
+        }
+
+        FHNode<T>* getMax(FHNode<T>* head) {
+            FHNode<T>* max = head;
+
+            for (FHNode<T>* node : iterate(head)) {
+                if ((max == nullptr) || ((node != nullptr) && (node->key > max->key))) {
+                    max = node;
+                }
+
+                if (node->child) {
+                    node = getMax(node->child);
+                    if ((max == nullptr) || ((node != nullptr) && (node->key > max->key))) {
+                        max = node;
+                    }
+                }
+            }
+
+            return max;
         }
 
         FHNode<T>* min = nullptr;
