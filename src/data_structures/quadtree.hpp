@@ -10,7 +10,7 @@
 class AABB {
     public:
         AABB(Coordinates center, double halfSize);
-        bool containsPoint(const Coordinates& coords);
+        bool containsPoint(const Coordinates& coords) const;
         std::array<AABB, 4> split();
 
         friend std::ostream& operator<<(std::ostream& os, const AABB& obj);
@@ -28,6 +28,8 @@ class Quadtree {
         friend std::ostream& operator<<(std::ostream& os, const Quadtree& obj);
     private:
         void subdivide();
+        const Quadtree* selectQuadrant(const Coordinates& queryPoint);
+        const OsmNode* findNearest(const Coordinates& queryPoint, const OsmNode* best = nullptr, double radius = DBL_MAX) const;
 
         const OsmNode* point;
         AABB boundary;
