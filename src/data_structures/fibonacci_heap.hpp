@@ -33,7 +33,7 @@ class FibonacciHeap {
             return size == 0;
         }
 
-        int getSize() const {
+        u32 getSize() const {
             return size;
         }
 
