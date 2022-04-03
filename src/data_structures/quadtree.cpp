@@ -77,6 +77,10 @@ void Quadtree::insert(const OsmNode& newPoint) {
         return;
     }
 
+    if (point && point->coordinates == newPoint.coordinates) {
+        return;
+    }
+
     if (nw == nullptr) {
         // Leaf node
         if (point == nullptr) {

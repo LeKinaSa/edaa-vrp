@@ -59,3 +59,7 @@ ostream& operator<<(ostream& os, const Coordinates& obj) {
 Coordinates Coordinates::operator+(const Coordinates& obj) {
     return Coordinates(latitude + obj.latitude, longitude + obj.longitude);
 }
+
+bool Coordinates::operator==(const Coordinates& obj) const {
+    return latitude == obj.latitude && longitude == obj.longitude;
+}

@@ -107,6 +107,39 @@ void kdTreeQuadtreeComplexityAnalysis(u32 seed) {
     }
 }
 
+void quadtreeRealDataComplexityAnalysis(u32 seed) {
+    static const u32 nnIterations = 10000;
+    i64 nnQuadtree = 0;
+
+    // Get nodes
+    OsmXmlData data = parseOsmXml("../data/pa.xml");
+    AABB boundary(data.minCoords, data.maxCoords);
+    Quadtree quadtree(boundary);
+
+    // Insert nodes into Quadtree
+    for (const pair<u64, OsmNode>& node : data.graph.getNodes()) {
+        quadtree.insert(data.graph.getNode(node.first));
+    }
+
+    srand(seed);
+
+    // Nearest Neighbor Iterations
+    for (u32 _ = 0; _ < nnIterations; ++_) {
+        Coordinates point(
+            randomDouble(data.minCoords.getLatitude (), data.maxCoords.getLatitude ()),
+            randomDouble(data.minCoords.getLongitude(), data.maxCoords.getLongitude())
+        );
+
+        auto start = high_resolution_clock::now();
+        quadtree.nearestNeighbor(point);
+        auto end = high_resolution_clock::now();
+        auto us = interval<nanoseconds>(start, end);
+        nnQuadtree += us;
+    }
+    nnQuadtree /= nnIterations;
+    cout << nnQuadtree << endl;
+}
+
 void heapComplexityAnalysis(u32 seed) {
     static const size_t size = 7;
     static const double minKey = 0, maxKey = 500;

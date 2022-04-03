@@ -21,6 +21,7 @@ class Coordinates {
 
         friend std::ostream& operator<<(std::ostream& os, const Coordinates& obj);
         Coordinates operator+(const Coordinates& coord2);
+        bool operator==(const Coordinates& coord2) const;
     private:
         double latitude, longitude;
 };
