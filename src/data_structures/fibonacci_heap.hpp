@@ -33,7 +33,7 @@ class FibonacciHeap {
             return size == 0;
         }
 
-        int getSize() const {
+        u32 getSize() const {
             return size;
         }
 
@@ -118,7 +118,7 @@ class FibonacciHeap {
         }
 
         void decreaseKey(FHNode<T>* node, double key) {
-            if (key > node->key) {
+            if (key >= node->key) {
                 return;
             }
 
@@ -281,6 +281,7 @@ class FibonacciHeap {
             min->next->prev = node;
             min->next = node;
 
+            node->parent = nullptr;
             node->marked = false;
         }
 
