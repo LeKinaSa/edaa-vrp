@@ -59,3 +59,8 @@ ostream& operator<<(ostream& os, const Coordinates& obj) {
 Coordinates Coordinates::operator+(const Coordinates& obj) {
     return Coordinates(latitude + obj.latitude, longitude + obj.longitude);
 }
+
+bool Coordinates::operator==(const Coordinates& obj) const {
+    cout << this->haversine(obj) << " " << *this << "==" << obj << endl;
+    return latitude == obj.latitude && longitude == obj.longitude;
+}
