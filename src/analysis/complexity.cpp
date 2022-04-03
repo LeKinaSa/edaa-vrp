@@ -202,6 +202,11 @@ void heapComplexityAnalysis(u32 seed) {
             vFib.push_back(fibHeap.insert(true, key));
 
             if (i == numNodes[current] - 1) {
+                for (u32 _ = 0; _ < 5; ++_) {
+                    fibHeap.insert(true, minKey - 10);
+                    fibHeap.extractMin();
+                }
+
                 for (u32 _ = 0; _ < decreaseKeyIters; ++_) {
                     size_t idx = rand() % vBin.size();
                     uniform_real_distribution<double> tempDist(minKey, vBin[idx]->key);
