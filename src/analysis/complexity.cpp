@@ -28,6 +28,9 @@ void kdTreeQuadtreeComplexityAnalysis(u32 seed) {
     static const u32 nnIterations = 10000;
 
     srand(seed);
+    random_device rd;
+    default_random_engine eng(rd());
+    uniform_real_distribution<double> randDist(minC, maxC);
 
     array<i64, size> constructionKDTree = {}, constructionQuadtree = {},
         nnKDTree = {}, nnQuadtree = {};
@@ -38,12 +41,12 @@ void kdTreeQuadtreeComplexityAnalysis(u32 seed) {
         vector<OsmNode> v;
         v.reserve(n);
         for (u32 _ = 0; _ < n; ++_) {
-            v.push_back({0, Coordinates(randomDouble(minC, maxC), randomDouble(minC, maxC))});
+            v.push_back({0, Coordinates(randDist(eng), randDist(eng))});
         }
 
         vector<reference_wrapper<const OsmNode>> refV;
         refV.reserve(n);
-        for (OsmNode& n : v) {
+        for (const OsmNode& n : v) {
             refV.push_back(n);
         }
         
@@ -61,7 +64,7 @@ void kdTreeQuadtreeComplexityAnalysis(u32 seed) {
         constructionQuadtree[i] = interval<microseconds>(start, end);
 
         for (u32 _ = 0; _ < nnIterations; ++_) {
-            Coordinates r(randomDouble(minC, maxC), randomDouble(minC, maxC));
+            Coordinates r(randDist(eng), randDist(eng));
 
             const OsmNode* kdr, * qtr;
 
@@ -120,7 +123,7 @@ void quadtreeRealDataComplexityAnalysis(u32 seed) {
     // Nearest Neighbor Iterations
     for (u32 _ = 0; _ < nnIterations; ++_) {
         Coordinates point(
-            randomDouble(data.minCoords.getLatitude (), data.maxCoords.getLatitude ()),
+            randomDouble(data.minCoords.getLatitude(), data.maxCoords.getLatitude()),
             randomDouble(data.minCoords.getLongitude(), data.maxCoords.getLongitude())
         );
 
@@ -204,7 +207,7 @@ void heapComplexityAnalysis(u32 seed) {
                 extractMinFib[current] /= extractMinIters;
 
                 for (u32 _ = 0; _ < extractMinIters; ++_) {
-                    double key = randomDouble(minKey, maxKey);
+                    double key = randDist(eng);
                     binHeap.insert(true, key);
                     fibHeap.insert(true, key);
                 }
