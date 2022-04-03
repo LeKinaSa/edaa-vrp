@@ -20,7 +20,7 @@ CvrpInstance::CvrpInstance(ifstream& stream) {
     vehicleCapacity = json["vehicle_capacity"];
 
     auto deliveriesJson = json["deliveries"];
-    deliveries = vector<CvrpDelivery>(deliveriesJson.size());
+    deliveries = vector<CvrpDelivery>();
 
     for (auto delivery : deliveriesJson.items()) {
         auto v = delivery.value();
