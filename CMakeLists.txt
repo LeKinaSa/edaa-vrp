@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 project(cvrp)
 
+set(GCC_FLAGS_OPTIMIZE "-Ofast -fno-signed-zeros -fno-trapping-math -frename-registers -funroll-loops")
+
 include_directories(lib)
 add_subdirectory(lib/GraphViewerCpp)
 
@@ -18,5 +20,7 @@ add_executable(${PROJECT_NAME}
 
     lib/tinyxml/tinyxml2.cpp
 )
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_FLAGS_OPTIMIZE}")
 
 target_link_libraries(${PROJECT_NAME} PUBLIC graphviewer)

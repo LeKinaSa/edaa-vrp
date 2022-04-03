@@ -47,3 +47,6 @@ _deps
 # VSCode
 .vscode/*
 build/*
+
+*.xml
+*.json

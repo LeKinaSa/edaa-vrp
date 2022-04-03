@@ -41,7 +41,7 @@ OsmXmlData parseOsmXml(const char* path) {
     }
 
     static const unordered_set<string> invalidHighwayValues = {
-        "pedestrian", "track", "escape", "raceway", "busway",
+        "pedestrian", "track", "escape", "raceway", "busway", "bus_guideway",
         "footway", "bridleway", "steps", "corridor", "path", "cycleway",
         "proposed", "construction", "elevator"
     };
