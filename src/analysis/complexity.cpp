@@ -2,11 +2,13 @@
 #include <array>
 #include <chrono>
 #include <iostream>
+#include <iomanip>
 #include <random>
 #include "complexity.hpp"
-#include "../types.hpp"
 #include "../data_structures/kd_tree.hpp"
 #include "../data_structures/quadtree.hpp"
+#include "../data_structures/binary_heap.hpp"
+#include "../data_structures/fibonacci_heap.hpp"
 
 using namespace std;
 using chrono::high_resolution_clock;
@@ -24,14 +26,16 @@ inline u64 interval(const high_resolution_clock::time_point& start,
     return duration_cast<T>(end - start).count();
 }
 
-void kdTreeQuadtreeComplexityAnalysis(unsigned int seed) {
+void kdTreeQuadtreeComplexityAnalysis(u32 seed) {
+    static const size_t size = 10;
+    static const double minC = -75, maxC = 75;
+    static const array<u32, size> numPoints = {100, 500, 1000, 2500, 5000, 10000,
+        50000, 100000, 500000, 1000000};
+    static const u32 nnIterations = 10000;
+
     srand(seed);
 
-    const array<u32, 10> numPoints = {100, 500, 1000, 2500, 5000, 10000,
-        50000, 100000, 500000, 1000000};
-    const double minC = -75, maxC = 75;
-    const u32 nnIterations = 10000;
-    array<i64, 10> constructionKDTree = {}, constructionQuadtree = {},
+    array<i64, size> constructionKDTree = {}, constructionQuadtree = {},
         nnKDTree = {}, nnQuadtree = {};
 
     for (u32 i = 0; i < numPoints.size(); ++i) {
@@ -100,5 +104,158 @@ void kdTreeQuadtreeComplexityAnalysis(unsigned int seed) {
     for (u32 i = 0; i < numPoints.size(); ++i) {
         cout << numPoints[i] << "\t|" << nnKDTree[i] << "\t\t|"
             << nnQuadtree[i] << "\n";
+    }
+}
+
+void heapComplexityAnalysis(u32 seed) {
+    static const size_t size = 7;
+    static const double minKey = 0, maxKey = 500;
+    static const array<u32, size> numNodes = {1000, 5000, 10000,
+        50000, 100000, 500000, 1000000};
+    static const u32 insertIters = 100, extractMinIters = 100,
+        decreaseKeyIters = 250;
+
+    srand(seed);
+    random_device rd;
+    default_random_engine eng(rd());
+    uniform_real_distribution<double> randDist(minKey, maxKey);
+
+    array<u64, size> insertBin = {}, extractMinBin = {}, decreaseKeyBin = {},
+        insertFib = {}, extractMinFib = {}, decreaseKeyFib = {};
+
+    u32 current = 0;
+    {
+        BinaryHeap<bool> binHeap;
+        FibonacciHeap<bool> fibHeap;
+        for (u32 i = 0; i <= *numNodes.rbegin(); ++i) {
+            double key = randDist(eng);
+            
+            auto startBin = high_resolution_clock::now();
+            binHeap.insert(true, key);
+            auto endBin = high_resolution_clock::now();
+
+            auto startFib = high_resolution_clock::now();
+            fibHeap.insert(true, key);
+            auto endFib = high_resolution_clock::now();
+
+            if (i < numNodes[current]) {
+                if (i >= numNodes[current] - insertIters) {
+                    insertBin[current] += interval<nanoseconds>(startBin, endBin);
+                    insertFib[current] += interval<nanoseconds>(startFib, endFib);
+                }
+            }
+            else {
+                insertBin[current] /= insertIters;
+                insertFib[current] /= insertIters;
+                ++current;
+            }
+        }
+    }
+
+    current = 0;
+    {
+        BinaryHeap<bool> binHeap;
+        FibonacciHeap<bool> fibHeap;
+        for (u32 i = 0; i <= *numNodes.rbegin(); ++i) {
+            double key = randDist(eng);
+            binHeap.insert(true, key);
+            fibHeap.insert(true, key);
+
+            if (i == numNodes[current]) {
+                for (u32 _ = 0; _ < extractMinIters; ++_) {
+                    auto start = high_resolution_clock::now();
+                    binHeap.extractMin();
+                    auto end = high_resolution_clock::now();
+                    extractMinBin[current] += interval<microseconds>(start, end);
+
+                    start = high_resolution_clock::now();
+                    fibHeap.extractMin();
+                    end = high_resolution_clock::now();
+                    extractMinFib[current] += interval<microseconds>(start, end);
+                }
+                extractMinBin[current] /= extractMinIters;
+                extractMinFib[current] /= extractMinIters;
+
+                for (u32 _ = 0; _ < extractMinIters; ++_) {
+                    double key = randomDouble(minKey, maxKey);
+                    binHeap.insert(true, key);
+                    fibHeap.insert(true, key);
+                }
+                ++current;
+            }
+        }
+    }
+
+    current = 0;
+    {
+        BinaryHeap<bool> binHeap;
+        vector<BHNode<bool>*> vBin;
+        vBin.reserve(*numNodes.rbegin());
+        
+        FibonacciHeap<bool> fibHeap;
+        vector<FHNode<bool>*> vFib;
+        vFib.reserve(*numNodes.rbegin());
+
+        for (u32 i = 0; i < *numNodes.rbegin(); ++i) {
+            double key = randDist(eng);
+            vBin.push_back(binHeap.insert(true, key));
+            vFib.push_back(fibHeap.insert(true, key));
+
+            if (i == numNodes[current] - 1) {
+                for (u32 _ = 0; _ < 5; ++_) {
+                    fibHeap.insert(true, minKey - 10);
+                    fibHeap.extractMin();
+                }
+
+                for (u32 _ = 0; _ < decreaseKeyIters; ++_) {
+                    size_t idx = rand() % vBin.size();
+                    uniform_real_distribution<double> tempDist(minKey, vBin[idx]->key);
+                    double newKey = tempDist(eng);
+
+                    auto start = high_resolution_clock::now();
+                    binHeap.decreaseKey(vBin[idx], newKey);
+                    auto end = high_resolution_clock::now();
+                    decreaseKeyBin[current] += interval<nanoseconds>(start, end);
+
+                    start = high_resolution_clock::now();
+                    fibHeap.decreaseKey(vFib[idx], newKey);
+                    end = high_resolution_clock::now();
+                    decreaseKeyFib[current] += interval<nanoseconds>(start, end);
+                }
+                decreaseKeyBin[current] /= decreaseKeyIters;
+                decreaseKeyFib[current] /= decreaseKeyIters;
+                ++current;
+            }
+        }
+    }
+
+    cout << "Insertion - O(1)\n";
+    cout << string(50, '-') << "\n";
+    cout << setw(10) << "Nodes" << " | " << setw(10) << "Bin (ns)" << " | "
+        << setw(10) << "Fib (ns)" << "\n";
+
+    for (u32 i = 0; i < numNodes.size(); ++i) {
+        cout << setw(10) << numNodes[i] << " | " << setw(10) << insertBin[i] 
+            << " | " << setw(10) << insertFib[i] << "\n";
+    }
+
+    cout << "\nExtract Min - O(log n)\n";
+    cout << string(50, '-') << "\n";
+    cout << setw(10) << "Nodes" << " | " << setw(10) << "Bin (ns)" << " | "
+        << setw(10) << "Fib (ns)" << "\n";
+
+    for (u32 i = 0; i < numNodes.size(); ++i) {
+        cout << setw(10) << numNodes[i] << " | " << setw(10) << extractMinBin[i] 
+            << " | " << setw(10) << extractMinFib[i] << "\n";
+    }
+
+    cout << "\nDecrease Key - O(log n) [Bin], O(1) [Fib]\n";
+    cout << string(50, '-') << "\n";
+    cout << setw(10) << "Nodes" << " | " << setw(10) << "Bin (ns)" << " | "
+        << setw(10) << "Fib (ns)" << "\n";
+
+    for (u32 i = 0; i < numNodes.size(); ++i) {
+        cout << setw(10) << numNodes[i] << " | " << setw(10) << decreaseKeyBin[i] 
+            << " | " << setw(10) << decreaseKeyFib[i] << "\n";
     }
 }
