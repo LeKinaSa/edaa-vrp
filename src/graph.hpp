@@ -33,6 +33,14 @@ class Graph {
         const std::unordered_map<u64, T>& getNodes() const {
             return nodes;
         }
+
+        size_t numEdges() const {
+            size_t n = 0;
+            for (const auto& p : adjList) {
+                n += p.second.size();
+            }
+            return n;
+        }
     private:
         std::unordered_map<u64, T> nodes;
         std::unordered_map<u64, std::list<std::pair<u64, double>>> adjList;

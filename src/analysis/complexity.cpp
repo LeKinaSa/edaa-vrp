@@ -9,21 +9,15 @@
 #include "../data_structures/quadtree.hpp"
 #include "../data_structures/binary_heap.hpp"
 #include "../data_structures/fibonacci_heap.hpp"
+#include "../utils.hpp"
 
 using namespace std;
 using chrono::high_resolution_clock;
-using chrono::duration_cast;
 using chrono::microseconds;
 using chrono::nanoseconds;
 
 double randomDouble(double min, double max) {
     return min + static_cast<double>(rand()) / static_cast<double>(RAND_MAX / (max - min));
-}
-
-template <typename T>
-inline u64 interval(const high_resolution_clock::time_point& start,
-        const high_resolution_clock::time_point& end) {
-    return duration_cast<T>(end - start).count();
 }
 
 void kdTreeQuadtreeComplexityAnalysis(u32 seed) {

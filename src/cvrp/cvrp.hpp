@@ -14,15 +14,14 @@ struct CvrpDelivery {
 
 class CvrpInstance {
     public:
-        CvrpInstance(double vehicleCapacity, Coordinates origin,
-            std::vector<CvrpDelivery> deliveries,
-            std::vector<std::vector<double>> distanceMatrix);
-        CvrpInstance(std::ifstream& stream);
+        explicit CvrpInstance(std::ifstream& stream);
 
         double getVehicleCapacity() const;
         const Coordinates& getOrigin() const;
         const std::vector<CvrpDelivery>& getDeliveries() const;
         const std::vector<std::vector<double>> getDistanceMatrix() const;
+
+        void setDistance(size_t from, size_t to, double distance);
     private:
         double vehicleCapacity;
         Coordinates origin;
