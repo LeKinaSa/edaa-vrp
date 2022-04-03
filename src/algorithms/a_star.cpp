@@ -7,54 +7,56 @@
 
 using namespace std;
 
-pair<list<u64>, double> aStarSearch(Graph<OsmNode> g, u64 start, u64 end) {
+pair<list<u64>, double> aStarSearch(const Graph<OsmNode>& g, u64 start, u64 end) {
     FibonacciHeap<u64> heap;
     map<u64, u64> predecessorMap;
-    map<u64, double> currentCostMap;
+    map<u64, double> gScore;
 
     Coordinates endCoords     = g.getNode(end).coordinates;
     Coordinates currentCoords = g.getNode(start).coordinates;
 
     double distance = 0;
-    double estimate = currentCoords.haversine(endCoords);
-    currentCostMap[start] = distance;
-    predecessorMap[start] = start;
-    heap.insert(start, distance + estimate);
+    double fScore = distance + currentCoords.haversine(endCoords);
+    gScore[start] = distance;
+    heap.insert(start, fScore);
 
-    u64 min, nextNode;
+    u64 min, neighbor;
     double edgeLength;
-    list<pair<u64, double>> edges;
     while (!heap.empty()) {
         min = heap.extractMin();
-        edges = g.getEdges(min);
-        for (pair<u64, double> edge : edges) {
-            nextNode   = edge.first;
-            edgeLength = edge.second;
-            distance   = currentCostMap[min] + edgeLength;
 
-            // Check if the destination node has been reached
-            if (nextNode == end) {
-                predecessorMap[nextNode] = min;
-
-                u64 node = end;
-                list<u64> path;
+        // Check if the destination node has been reached
+        if (min == end) {
+            u64 node = min;
+            list<u64> path;
+            path.push_front(node);
+            while (predecessorMap.count(node)) {
+                node = predecessorMap[node];
                 path.push_front(node);
-                while (node != start) {
-                    node = predecessorMap[node];
-                    path.push_front(node);
-                }
-
-                return make_pair(path, distance);
             }
 
-            // Update distance and predecessor and add node to the heap (only if the node is new)
-            if (!currentCostMap.count(nextNode)) {
-                currentCoords = g.getNode(nextNode).coordinates;
-                double estimate = currentCoords.haversine(endCoords);
+            return make_pair(path, distance);
+        }
 
-                currentCostMap[nextNode] = distance;
-                predecessorMap[nextNode] = min;
-                heap.insert(nextNode, distance + estimate);
+        for (const pair<u64, double>& edge : g.getEdges(min)) {
+            neighbor   = edge.first;
+            edgeLength = edge.second;
+            distance   = gScore[min] + edgeLength;
+
+            bool seen = gScore.count(neighbor) != 0;
+            if (!seen || distance < gScore[neighbor]) {
+                currentCoords = g.getNode(neighbor).coordinates;
+                fScore = distance + currentCoords.haversine(endCoords);
+
+                predecessorMap[neighbor] = min;
+                gScore[neighbor] = distance;
+                if (seen) {
+                    FHNode<u64>* fibHeapNode;
+                    heap.decreaseKey(fibHeapNode, fScore);
+                }
+                else {
+                    heap.insert(neighbor, fScore);
+                }
             }
         }
     }
