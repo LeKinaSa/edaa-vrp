@@ -41,20 +41,20 @@ OsmXmlData parseOsmXml(const char* path) {
     }
 
     static const unordered_set<string> invalidHighwayValues = {
-        "service", "pedestrian", "track", "escape", "raceway", "busway",
+        "pedestrian", "track", "escape", "raceway", "busway",
         "footway", "bridleway", "steps", "corridor", "path", "cycleway",
         "proposed", "construction", "elevator"
     };
 
     const XMLElement* way = root->FirstChildElement("way");
     while (way != nullptr) {
-        bool oneWay = true;
+        bool oneWay = false;
         bool valid = true;
 
         const XMLElement* tag = way->FirstChildElement("tag");
         while (tag != nullptr) {
-            if (tag->Attribute("k", "oneway") && tag->Attribute("v", "no")) {
-                oneWay = false;
+            if (tag->Attribute("k", "oneway") && tag->Attribute("v", "yes")) {
+                oneWay = true;
             }
 
             if ((tag->Attribute("k", "access") && tag->Attribute("v", "no")) ||
