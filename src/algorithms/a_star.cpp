@@ -9,6 +9,7 @@ using namespace std;
 
 pair<list<u64>, double> aStarSearch(const Graph<OsmNode>& g, u64 start, u64 end) {
     FibonacciHeap<u64> heap;
+    map<u64, FHNode<u64>*> fibHeapNodes;
     map<u64, u64> predecessorMap;
     map<u64, double> gScore;
 
@@ -18,12 +19,13 @@ pair<list<u64>, double> aStarSearch(const Graph<OsmNode>& g, u64 start, u64 end)
     double distance = 0;
     double fScore = distance + currentCoords.haversine(endCoords);
     gScore[start] = distance;
-    heap.insert(start, fScore);
+    fibHeapNodes[start] = heap.insert(start, fScore);
 
     u64 min, neighbor;
     double edgeLength;
     while (!heap.empty()) {
         min = heap.extractMin();
+        fibHeapNodes.erase(min);
 
         // Check if the destination node has been reached
         if (min == end) {
@@ -51,11 +53,10 @@ pair<list<u64>, double> aStarSearch(const Graph<OsmNode>& g, u64 start, u64 end)
                 predecessorMap[neighbor] = min;
                 gScore[neighbor] = distance;
                 if (seen) {
-                    FHNode<u64>* fibHeapNode;
-                    heap.decreaseKey(fibHeapNode, fScore);
+                    heap.decreaseKey(fibHeapNodes[neighbor], fScore);
                 }
                 else {
-                    heap.insert(neighbor, fScore);
+                    fibHeapNodes[neighbor] = heap.insert(neighbor, fScore);
                 }
             }
         }

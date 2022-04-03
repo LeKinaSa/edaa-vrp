@@ -26,9 +26,11 @@ CvrpInstance::CvrpInstance(ifstream& stream) {
         deliveries.push_back({id, Coordinates(point["lat"], point["lng"]), size});
     }
 
+    // Index 0 is for the depot, indices 1 to n correspond to indices 0 to n-1
+    // of the deliveries vector
     size_t numDeliveries = deliveries.size();
     distanceMatrix = vector<vector<double>>(
-        numDeliveries, vector<double>(numDeliveries, 0)
+        numDeliveries + 1, vector<double>(numDeliveries + 1, 0)
     );
 }
 

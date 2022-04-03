@@ -256,7 +256,7 @@ class FibonacciHeap {
                     addChild(lower, higher);
 
                     a[d] = nullptr;
-                    d += 1;
+                    ++d;
                 }
                 a[d] = node;
             }

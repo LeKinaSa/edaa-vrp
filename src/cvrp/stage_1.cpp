@@ -1,6 +1,7 @@
 
 #include <chrono>
 #include "stage_1.hpp"
+#include "../algorithms/a_star.hpp"
 #include "../data_structures/quadtree.hpp"
 #include "../data_structures/kd_tree.hpp"
 #include "../utils.hpp"
@@ -87,6 +88,37 @@ MapMatchingResult matchLocations(const OsmXmlData& osmData,
     return {originNode, deliveryNodes};
 }
 
-void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem) {
-    // TODO
+void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem,
+        const MapMatchingResult& mmResult, bool printLogs) {
+    size_t n = 1 + problem.getDeliveries().size();
+
+    auto matchedPoint = [mmResult](size_t idx) {
+        if (idx == 0) {
+            return mmResult.originNode;
+        }
+        return mmResult.deliveryNodes[idx - 1];
+    };
+
+    // We can't assume d[from, to] == d[to, from] since there are directed edges
+    for (size_t from = 0; from < n; ++from) {
+        for (size_t to = 0; to < n; ++to) {
+            if (from != to) {
+                pair<list<u64>, double> result = aStarSearch(
+                    osmData.graph,
+                    matchedPoint(from),
+                    matchedPoint(to)
+                );
+
+                cout << "(" << from << ", " << to << ") - " << result.second << endl;
+
+                if (result.first.size() == 0) {
+                    // Couldn't find a path...
+                    problem.setDistance(from, to, DBL_MAX);
+                }
+                else {
+                    problem.setDistance(from, to, result.second);
+                }
+            }
+        }
+    }
 }

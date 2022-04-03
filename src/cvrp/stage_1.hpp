@@ -22,6 +22,7 @@ MapMatchingResult matchLocations(const OsmXmlData& osmData,
     const CvrpInstance& problem, MapMatchingDataStructure dataStructure = KD_TREE,
     bool printLogs = false);
 
-void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem);
+void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem,
+    const MapMatchingResult& mmResult, bool printLogs = false);
 
 #endif // CVRP_STAGE_1_H
