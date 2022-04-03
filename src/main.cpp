@@ -1,6 +1,8 @@
 #include <iostream>
 #include "algorithms/a_star.hpp"
 #include "data_structures/fibonacci_heap.hpp"
+#include "data_structures/quadtree.hpp"
+#include "data_structures/kd_tree.hpp"
 #include "coordinates.hpp"
 #include "graph.hpp"
 
@@ -12,8 +14,8 @@ Graph<OsmNode> getGraph() {
     Coordinates c0(0, 0), c1(4, 0), c2(8.5, 3.8), c3(7.3, 7.8),
             c4(1, 2.8), c5(3.8, 6), c6(0, 10.8);
 
-    OsmNode n0 = {c0}, n1 = {c1}, n2 = {c2}, n3 = {c3}, n4 = {c4},
-            n5 = {c5}, n6 = {c6};
+    OsmNode n0 = {0, c0}, n1 = {1, c1}, n2 = {2, c2}, n3 = {3, c3}, n4 = {4, c4},
+            n5 = {5, c5}, n6 = {6, c6};
 
     g.addNode(0, n0);
     g.addNode(1, n1);
@@ -75,6 +77,7 @@ void aStarTest() {
 }
 
 int main() {
-    aStarTest();
+    //aStarTest();
+
     return 0;
 }

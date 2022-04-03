@@ -44,7 +44,7 @@ void kdTreeQuadtreeComplexityAnalysis(u32 seed) {
         vector<OsmNode> v;
         v.reserve(n);
         for (u32 _ = 0; _ < n; ++_) {
-            v.push_back({Coordinates(randomDouble(minC, maxC), randomDouble(minC, maxC))});
+            v.push_back({0, Coordinates(randomDouble(minC, maxC), randomDouble(minC, maxC))});
         }
 
         vector<reference_wrapper<const OsmNode>> refV;

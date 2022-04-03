@@ -6,6 +6,7 @@
 #include "../graph.hpp"
 
 struct OsmNode {
+    u64 id;
     Coordinates coordinates;
 };
 

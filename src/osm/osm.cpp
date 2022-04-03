@@ -30,11 +30,12 @@ OsmXmlData parseOsmXml(const char* path) {
 
     const XMLElement* nodeElement = root->FirstChildElement("node");
     while (nodeElement != nullptr) {
-        OsmNode node = { Coordinates(
+        u64 id = stoull(nodeElement->Attribute("id"));
+        OsmNode node = { id, Coordinates(
             stod(nodeElement->Attribute("lat")),
             stod(nodeElement->Attribute("lon"))
         ) };
-        data.graph.addNode(stoull(nodeElement->Attribute("id")), node);
+        data.graph.addNode(id, node);
 
         nodeElement = nodeElement->NextSiblingElement("node");
     }
