@@ -108,10 +108,10 @@ void kdTreeQuadtreeComplexityAnalysis(u32 seed) {
 }
 
 void heapComplexityAnalysis(u32 seed) {
-    static const size_t size = 8;
+    static const size_t size = 7;
     static const double minKey = 0, maxKey = 500;
-    static const array<u32, size> numNodes = {1000 , 5000, 10000,
-        50000, 100000, 500000, 1000000, 5000000};
+    static const array<u32, size> numNodes = {1000, 5000, 10000,
+        50000, 100000, 500000, 1000000};
     static const u32 insertIters = 100, extractMinIters = 100,
         decreaseKeyIters = 250;
 
@@ -128,7 +128,7 @@ void heapComplexityAnalysis(u32 seed) {
         BinaryHeap<bool> binHeap;
         FibonacciHeap<bool> fibHeap;
         for (u32 i = 0; i <= *numNodes.rbegin(); ++i) {
-            double key = randomDouble(minKey, maxKey);
+            double key = randDist(eng);
             
             auto startBin = high_resolution_clock::now();
             binHeap.insert(true, key);
@@ -157,7 +157,7 @@ void heapComplexityAnalysis(u32 seed) {
         BinaryHeap<bool> binHeap;
         FibonacciHeap<bool> fibHeap;
         for (u32 i = 0; i <= *numNodes.rbegin(); ++i) {
-            double key = randomDouble(minKey, maxKey);
+            double key = randDist(eng);
             binHeap.insert(true, key);
             fibHeap.insert(true, key);
 
@@ -189,7 +189,7 @@ void heapComplexityAnalysis(u32 seed) {
     current = 0;
     {
         BinaryHeap<bool> binHeap;
-        vector<pair<bool, double>*> vBin;
+        vector<BHNode<bool>*> vBin;
         vBin.reserve(*numNodes.rbegin());
         
         FibonacciHeap<bool> fibHeap;
@@ -197,14 +197,14 @@ void heapComplexityAnalysis(u32 seed) {
         vFib.reserve(*numNodes.rbegin());
 
         for (u32 i = 0; i < *numNodes.rbegin(); ++i) {
-            double key = randomDouble(minKey, maxKey);
+            double key = randDist(eng);
             vBin.push_back(binHeap.insert(true, key));
             vFib.push_back(fibHeap.insert(true, key));
 
             if (i == numNodes[current] - 1) {
                 for (u32 _ = 0; _ < decreaseKeyIters; ++_) {
                     size_t idx = rand() % vBin.size();
-                    uniform_real_distribution<double> tempDist(minKey, vBin[idx]->second);
+                    uniform_real_distribution<double> tempDist(minKey, vBin[idx]->key);
                     double newKey = tempDist(eng);
 
                     auto start = high_resolution_clock::now();
