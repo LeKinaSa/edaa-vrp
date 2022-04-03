@@ -116,8 +116,8 @@ void quadtreeRealDataComplexityAnalysis(u32 seed) {
     Quadtree quadtree(boundary);
 
     // Insert nodes into Quadtree
-    for (auto node : data.graph.getNodes()) {
-        quadtree.insert(node.second);
+    for (pair<u64, OsmNode> node : data.graph.getNodes()) {
+        quadtree.insert(data.graph.getNode(node.first));
     }
 
     srand(seed);
@@ -136,6 +136,7 @@ void quadtreeRealDataComplexityAnalysis(u32 seed) {
         nnQuadtree += us;
     }
     nnQuadtree /= nnIterations;
+    cout << nnQuadtree << endl;
 }
 
 void fibonacciHeapComplexityAnalysis(u32 seed) {
