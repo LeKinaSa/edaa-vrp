@@ -61,6 +61,5 @@ Coordinates Coordinates::operator+(const Coordinates& obj) {
 }
 
 bool Coordinates::operator==(const Coordinates& obj) const {
-    cout << this->haversine(obj) << " " << *this << "==" << obj << endl;
     return latitude == obj.latitude && longitude == obj.longitude;
 }
