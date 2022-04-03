@@ -64,6 +64,10 @@ class BinaryHeap {
             }
         }
 
+        bool empty() const {
+            return vec.empty();
+        }
+
         friend std::ostream& operator<<(std::ostream& os, const BinaryHeap<T>& obj) {
             for (const BHNode<T>* n : obj.vec) {
                 os << n->data << "[" << n->key << "]" << " ";
