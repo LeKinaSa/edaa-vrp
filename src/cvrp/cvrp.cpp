@@ -7,10 +7,9 @@ using namespace std;
 using json = nlohmann::json;
 
 CvrpInstance::CvrpInstance(double vehicleCapacity, Coordinates origin,
-        vector<CvrpDelivery> deliveries, vector<string> deliveryIds,
-        vector<vector<double>> distanceMatrix)
+        vector<CvrpDelivery> deliveries, vector<vector<double>> distanceMatrix)
         : vehicleCapacity(vehicleCapacity), origin(origin), deliveries(deliveries),
-        deliveryIds(deliveryIds), distanceMatrix(distanceMatrix) {}
+        distanceMatrix(distanceMatrix) {}
 
 CvrpInstance::CvrpInstance(ifstream& stream) {
     auto json = json::parse(stream);
@@ -22,16 +21,14 @@ CvrpInstance::CvrpInstance(ifstream& stream) {
 
     auto deliveriesJson = json["deliveries"];
     deliveries = vector<CvrpDelivery>(deliveriesJson.size());
-    deliveryIds = vector<string>(deliveriesJson.size());
 
     for (auto delivery : deliveriesJson.items()) {
         auto v = delivery.value();
-
-        deliveryIds.push_back(v["id"]);
-
+        
+        string id = v["id"];
         auto point = v["point"];
         double size = v["size"];
-        deliveries.push_back({Coordinates(point["lat"], point["lng"]), size});
+        deliveries.push_back({id, Coordinates(point["lat"], point["lng"]), size});
     }
 }
 
@@ -45,10 +42,6 @@ const Coordinates& CvrpInstance::getOrigin() const {
 
 const vector<CvrpDelivery>& CvrpInstance::getDeliveries() const {
     return deliveries;
-}
-
-const vector<string>& CvrpInstance::getDeliveryIds() const {
-    return deliveryIds;
 }
 
 const vector<vector<double>> CvrpInstance::getDistanceMatrix() const {
