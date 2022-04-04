@@ -22,11 +22,11 @@ double randomDouble(double min, double max) {
 }
 
 void kdTreeQuadtreeComplexityAnalysis(u32 seed, bool writeToFile) {
-    static const size_t size = 10;
+    static const size_t size = 12;
     static const double minC = -75, maxC = 75;
     static const array<u32, size> numPoints = {100, 500, 1000, 2500, 5000, 10000,
-        50000, 100000, 500000, 1000000};
-    static const u32 nnIterations = 10000;
+        25000, 50000, 100000, 250000, 500000, 1000000};
+    static const u32 cIterations = 10, nnIterations = 10000;
     static const char* fileName = "tree_ca.txt";
 
     ofstream ofs(fileName);
@@ -36,61 +36,71 @@ void kdTreeQuadtreeComplexityAnalysis(u32 seed, bool writeToFile) {
     default_random_engine eng(rd());
     uniform_real_distribution<double> randDist(minC, maxC);
 
-    array<i64, size> constructionKDTree = {}, constructionQuadtree = {},
+    array<u64, size> constructionKDTree = {}, constructionQuadtree = {},
         nnKDTree = {}, nnQuadtree = {};
 
     for (u32 i = 0; i < numPoints.size(); ++i) {
         u32 n = numPoints[i];
         if (writeToFile) ofs << ">" << n << "\n";
 
-        vector<OsmNode> v;
-        v.reserve(n);
-        for (u32 _ = 0; _ < n; ++_) {
-            v.push_back({0, Coordinates(randDist(eng), randDist(eng))});
-        }
+        for (u32 c = 0; c < cIterations; ++c) {
+            vector<OsmNode> v;
+            v.reserve(n);
+            for (u32 _ = 0; _ < n; ++_) {
+                v.push_back({0, Coordinates(randDist(eng), randDist(eng))});
+            }
 
-        vector<reference_wrapper<const OsmNode>> refV;
-        refV.reserve(n);
-        for (const OsmNode& n : v) {
-            refV.push_back(n);
-        }
-        
-        auto start = high_resolution_clock::now();
-        KDTree kdt(refV);
-        auto end = high_resolution_clock::now();
-        constructionKDTree[i] = interval<microseconds>(start, end);
-        if (writeToFile) ofs << constructionKDTree[i] << " ";
-
-        start = high_resolution_clock::now();
-        Quadtree qt(AABB(Coordinates(minC, minC), Coordinates(maxC, maxC)));
-        for (const auto& n : v) {
-            qt.insert(n);
-        }
-        end = high_resolution_clock::now();
-        constructionQuadtree[i] = interval<microseconds>(start, end);
-        if (writeToFile) ofs << constructionQuadtree[i] << "\nNN\n";
-
-        for (u32 _ = 0; _ < nnIterations; ++_) {
-            Coordinates r(randDist(eng), randDist(eng));
-
-            const OsmNode* kdr, * qtr;
-
+            vector<reference_wrapper<const OsmNode>> refV;
+            refV.reserve(n);
+            for (const OsmNode& n : v) {
+                refV.push_back(n);
+            }
+            
             auto start = high_resolution_clock::now();
-            kdr = kdt.nearestNeighbor(r);
+            KDTree kdt(refV);
             auto end = high_resolution_clock::now();
-            auto us = interval<nanoseconds>(start, end);
-            nnKDTree[i] += us;
+            auto us = interval<microseconds>(start, end);
+            constructionKDTree[i] += us;
             if (writeToFile) ofs << us << " ";
 
             start = high_resolution_clock::now();
-            qtr = qt.nearestNeighbor(r);
+            Quadtree qt(AABB(Coordinates(minC, minC), Coordinates(maxC, maxC)));
+            for (const auto& n : v) {
+                qt.insert(n);
+            }
             end = high_resolution_clock::now();
-            us = interval<nanoseconds>(start, end);
-            nnQuadtree[i] += us;
+            us = interval<microseconds>(start, end);
+            constructionQuadtree[i] += us;
             if (writeToFile) ofs << us << "\n";
+
+            if (c == cIterations - 1) {
+                if (writeToFile) ofs << "NN\n";
+
+                for (u32 _ = 0; _ < nnIterations; ++_) {
+                    Coordinates r(randDist(eng), randDist(eng));
+
+                    const OsmNode* kdr, * qtr;
+
+                    auto start = high_resolution_clock::now();
+                    kdr = kdt.nearestNeighbor(r);
+                    auto end = high_resolution_clock::now();
+                    auto ns = interval<nanoseconds>(start, end);
+                    nnKDTree[i] += ns;
+                    if (writeToFile) ofs << ns << " ";
+
+                    start = high_resolution_clock::now();
+                    qtr = qt.nearestNeighbor(r);
+                    end = high_resolution_clock::now();
+                    ns = interval<nanoseconds>(start, end);
+                    nnQuadtree[i] += ns;
+                    if (writeToFile) ofs << ns << "\n";
+                }
+                nnKDTree[i] /= nnIterations;
+                nnQuadtree[i] /= nnIterations;
+            }
         }
-        nnKDTree[i] /= nnIterations;
-        nnQuadtree[i] /= nnIterations;
+        constructionKDTree[i] /= cIterations;
+        constructionQuadtree[i] /= cIterations;
     }
 
     ofs.close();
