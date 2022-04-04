@@ -1,5 +1,6 @@
 
 #include <chrono>
+#include <fstream>
 #include "stage_1.hpp"
 #include "../algorithms/a_star.hpp"
 #include "../data_structures/quadtree.hpp"
@@ -14,6 +15,9 @@ using chrono::nanoseconds;
 MapMatchingResult matchLocations(const OsmXmlData& osmData,
         const CvrpInstance& problem, MapMatchingDataStructure dataStructure,
         bool printLogs) {
+    static const char* filePath = "matching.txt";
+    ofstream ofs(filePath);
+
     u64 originNode = 0;
     vector<u64> deliveryNodes;
     const u32 numDeliveries = problem.getDeliveries().size();
@@ -23,6 +27,7 @@ MapMatchingResult matchLocations(const OsmXmlData& osmData,
     const u32 nnIterations = 1 + numDeliveries;
     u64 timeElapsed = 0;
     high_resolution_clock::time_point start, end;
+    u64 intv;
 
     if (dataStructure == QUADTREE) {
         Quadtree tree(AABB(osmData.minCoords, osmData.maxCoords));
@@ -33,13 +38,17 @@ MapMatchingResult matchLocations(const OsmXmlData& osmData,
         start = high_resolution_clock::now();
         originNode = tree.nearestNeighbor(problem.getOrigin())->id;
         end = high_resolution_clock::now();
-        timeElapsed += interval<nanoseconds>(start, end);
+        intv = interval<nanoseconds>(start, end);
+        timeElapsed += intv;
+        if (printLogs) ofs << intv << " ";
 
         for (const CvrpDelivery& delivery : problem.getDeliveries()) {
             start = high_resolution_clock::now();
             const OsmNode* node = tree.nearestNeighbor(delivery.coordinates);
             end = high_resolution_clock::now();
-            timeElapsed += interval<nanoseconds>(start, end);
+            intv = interval<nanoseconds>(start, end);
+            timeElapsed += intv;
+            if (printLogs) ofs << intv << " ";
 
             if (node) {
                 deliveryNodes.push_back(node->id);
@@ -62,13 +71,17 @@ MapMatchingResult matchLocations(const OsmXmlData& osmData,
         start = high_resolution_clock::now();
         originNode = tree.nearestNeighbor(problem.getOrigin())->id;
         end = high_resolution_clock::now();
-        timeElapsed += interval<nanoseconds>(start, end);
+        intv = interval<nanoseconds>(start, end);
+        timeElapsed += intv;
+        if (printLogs) ofs << intv << " ";
 
         for (const CvrpDelivery& delivery : problem.getDeliveries()) {
             start = high_resolution_clock::now();
             const OsmNode* node = tree.nearestNeighbor(delivery.coordinates);
             end = high_resolution_clock::now();
-            timeElapsed += interval<nanoseconds>(start, end);
+            intv = interval<nanoseconds>(start, end);
+            timeElapsed += intv;
+            if (printLogs) ofs << intv << " ";
 
             if (node) {
                 deliveryNodes.push_back(node->id);
@@ -84,12 +97,16 @@ MapMatchingResult matchLocations(const OsmXmlData& osmData,
             << timeElapsed / 1000 << "us (average of " << timeElapsed / nnIterations
             << "ns per iteration)\n";
     }
+    ofs.close();
 
     return {originNode, deliveryNodes};
 }
 
 void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem,
         const MapMatchingResult& mmResult, bool printLogs) {
+    static const char* filePath = "shortest_paths.txt";
+    ofstream ofs(filePath);
+
     size_t n = 1 + problem.getDeliveries().size();
 
     auto matchedPoint = [mmResult](size_t idx) {
@@ -103,13 +120,14 @@ void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem,
     for (size_t from = 0; from < n; ++from) {
         for (size_t to = 0; to < n; ++to) {
             if (from != to) {
+                auto start = high_resolution_clock::now();
                 pair<list<u64>, double> result = aStarSearch(
                     osmData.graph,
                     matchedPoint(from),
                     matchedPoint(to)
                 );
-
-                cout << "(" << from << ", " << to << ") - " << result.second << endl;
+                auto end = high_resolution_clock::now();
+                if (printLogs) ofs << interval<chrono::microseconds>(start, end) << " ";
 
                 if (result.first.size() == 0) {
                     // Couldn't find a path...
@@ -121,4 +139,6 @@ void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem,
             }
         }
     }
+
+    ofs.close();
 }

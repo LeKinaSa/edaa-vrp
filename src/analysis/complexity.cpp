@@ -161,10 +161,10 @@ void quadtreeRealDataComplexityAnalysis(u32 seed) {
 void heapComplexityAnalysis(u32 seed, bool writeToFile) {
     static const size_t size = 7;
     static const double minKey = 0, maxKey = 500;
-    static const array<u32, size> numNodes = {1000, 5000, 10000,
+    static const array<u32, size> numNodes = {5000, 10000, 25000,
         50000, 100000, 500000, 1000000};
-    static const u32 insertIters = 150, extractMinIters = 150,
-        decreaseKeyIters = 300;
+    static const u32 insertIters = 400, extractMinIters = 400,
+        decreaseKeyIters = 800;
     static const char* fileName = "heap_ca.txt";
 
     ofstream ofs(fileName);
