@@ -194,19 +194,35 @@ for ds, ops in data.items():
 #         ax.set_ylabel('Execution Time (nanoseconds)')
 #         plt.show()
 
-with open('matching_kd.txt', 'r') as f:
-    kd_data = list(map(int, f.read().split()))
-with open('matching_quad.txt', 'r') as f:
-    quad_data = list(map(int, f.read().split()))
+# with open('matching_kd.txt', 'r') as f:
+#     kd_data = list(map(int, f.read().split()))
+# with open('matching_quad.txt', 'r') as f:
+#     quad_data = list(map(int, f.read().split()))
 
-df = pd.DataFrame([kd_data, quad_data]).transpose()
-df.columns = ['K-d Tree', 'Quadtree']
+# df = pd.DataFrame([kd_data, quad_data]).transpose()
+# df.columns = ['K-d Tree', 'Quadtree']
+# df = pd.melt(df)
+
+# ax = sb.boxplot(data=df, x='variable', y='value', showfliers=False)
+# ax.set_xlabel('Data Structure')
+# ax.set_ylabel('Average Execution Time (nanoseconds)')
+# ax.set_title('Nearest Neighbor (Real Data)')
+# plt.show()
+
+with open('shortest_paths_bin.txt', 'r') as f:
+    bin_data = list(map(int, f.read().split()))
+with open('shortest_paths_fib.txt', 'r') as f:
+    fib_data = list(map(int, f.read().split()))
+
+df = pd.DataFrame([bin_data, fib_data]).transpose()
+df.columns = ['Binary Heap', 'Fibonacci Heap']
+df /= 1000
 df = pd.melt(df)
 
 ax = sb.boxplot(data=df, x='variable', y='value', showfliers=False)
 ax.set_xlabel('Data Structure')
-ax.set_ylabel('Average Execution Time (nanoseconds)')
-ax.set_title('Nearest Neighbor (Real Data)')
+ax.set_ylabel('Average Execution Time (milliseconds)')
+ax.set_title('A* Search (Real Data)')
 plt.show()
 
 # --- Memory consumption plots ---
