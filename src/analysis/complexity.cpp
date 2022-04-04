@@ -164,7 +164,10 @@ void heapComplexityAnalysis(u32 seed, bool writeToFile) {
     static const array<u32, size> numNodes = {1000, 5000, 10000,
         50000, 100000, 500000, 1000000};
     static const u32 insertIters = 150, extractMinIters = 150,
-        decreaseKeyIters = 250;
+        decreaseKeyIters = 300;
+    static const char* fileName = "heap_ca.txt";
+
+    ofstream ofs(fileName);
 
     srand(seed);
     random_device rd;
@@ -175,6 +178,7 @@ void heapComplexityAnalysis(u32 seed, bool writeToFile) {
         insertFib = {}, extractMinFib = {}, decreaseKeyFib = {};
 
     u32 current = 0;
+    if (writeToFile) ofs << "I\n>" << numNodes[current] << "\n";
     {
         BinaryHeap<bool> binHeap;
         FibonacciHeap<bool> fibHeap;
@@ -191,19 +195,24 @@ void heapComplexityAnalysis(u32 seed, bool writeToFile) {
 
             if (i < numNodes[current]) {
                 if (i >= numNodes[current] - insertIters) {
-                    insertBin[current] += interval<nanoseconds>(startBin, endBin);
-                    insertFib[current] += interval<nanoseconds>(startFib, endFib);
+                    u64 intBin = interval<nanoseconds>(startBin, endBin);
+                    u64 intFib = interval<nanoseconds>(startFib, endFib);
+                    insertBin[current] += intBin;
+                    insertFib[current] += intFib;
+                    if (writeToFile) ofs << intBin << " " << intFib << "\n";
                 }
             }
             else {
                 insertBin[current] /= insertIters;
                 insertFib[current] /= insertIters;
                 ++current;
+                if (writeToFile) ofs << ">" << numNodes[current] << "\n";
             }
         }
     }
 
     current = 0;
+    if (writeToFile) ofs << "EM\n>" << numNodes[current] << "\n";
     {
         BinaryHeap<bool> binHeap;
         FibonacciHeap<bool> fibHeap;
@@ -217,12 +226,15 @@ void heapComplexityAnalysis(u32 seed, bool writeToFile) {
                     auto start = high_resolution_clock::now();
                     binHeap.extractMin();
                     auto end = high_resolution_clock::now();
-                    extractMinBin[current] += interval<microseconds>(start, end);
+                    auto intBin = interval<nanoseconds>(start, end);
+                    extractMinBin[current] += intBin;
 
                     start = high_resolution_clock::now();
                     fibHeap.extractMin();
                     end = high_resolution_clock::now();
-                    extractMinFib[current] += interval<microseconds>(start, end);
+                    auto intFib = interval<nanoseconds>(start, end);
+                    extractMinFib[current] += intFib;
+                    if (writeToFile) ofs << intBin << " " << intFib << "\n";
                 }
                 extractMinBin[current] /= extractMinIters;
                 extractMinFib[current] /= extractMinIters;
@@ -233,11 +245,13 @@ void heapComplexityAnalysis(u32 seed, bool writeToFile) {
                     fibHeap.insert(true, key);
                 }
                 ++current;
+                if (writeToFile) ofs << ">" << numNodes[current] << "\n";
             }
         }
     }
 
     current = 0;
+    if (writeToFile) ofs << "DK\n>" << numNodes[current] << "\n";
     {
         BinaryHeap<bool> binHeap;
         vector<BHNode<bool>*> vBin;
@@ -266,16 +280,20 @@ void heapComplexityAnalysis(u32 seed, bool writeToFile) {
                     auto start = high_resolution_clock::now();
                     binHeap.decreaseKey(vBin[idx], newKey);
                     auto end = high_resolution_clock::now();
-                    decreaseKeyBin[current] += interval<nanoseconds>(start, end);
+                    auto intBin = interval<nanoseconds>(start, end);
+                    decreaseKeyBin[current] += intBin;
 
                     start = high_resolution_clock::now();
                     fibHeap.decreaseKey(vFib[idx], newKey);
                     end = high_resolution_clock::now();
-                    decreaseKeyFib[current] += interval<nanoseconds>(start, end);
+                    auto intFib = interval<nanoseconds>(start, end);
+                    decreaseKeyFib[current] += intFib;
+                    if (writeToFile) ofs << intBin << " " << intFib << "\n";
                 }
                 decreaseKeyBin[current] /= decreaseKeyIters;
                 decreaseKeyFib[current] /= decreaseKeyIters;
                 ++current;
+                if (writeToFile) ofs << ">" << numNodes[current] << "\n";
             }
         }
     }
