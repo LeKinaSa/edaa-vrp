@@ -1,6 +1,7 @@
 
 #include <array>
 #include <chrono>
+#include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <random>
@@ -20,12 +21,15 @@ double randomDouble(double min, double max) {
     return min + static_cast<double>(rand()) / static_cast<double>(RAND_MAX / (max - min));
 }
 
-void kdTreeQuadtreeComplexityAnalysis(u32 seed) {
+void kdTreeQuadtreeComplexityAnalysis(u32 seed, bool writeToFile) {
     static const size_t size = 10;
     static const double minC = -75, maxC = 75;
     static const array<u32, size> numPoints = {100, 500, 1000, 2500, 5000, 10000,
         50000, 100000, 500000, 1000000};
     static const u32 nnIterations = 10000;
+    static const char* fileName = "tree_ca.txt";
+
+    ofstream ofs(fileName);
 
     srand(seed);
     random_device rd;
@@ -37,6 +41,7 @@ void kdTreeQuadtreeComplexityAnalysis(u32 seed) {
 
     for (u32 i = 0; i < numPoints.size(); ++i) {
         u32 n = numPoints[i];
+        if (writeToFile) ofs << ">" << n << "\n";
 
         vector<OsmNode> v;
         v.reserve(n);
@@ -54,6 +59,7 @@ void kdTreeQuadtreeComplexityAnalysis(u32 seed) {
         KDTree kdt(refV);
         auto end = high_resolution_clock::now();
         constructionKDTree[i] = interval<microseconds>(start, end);
+        if (writeToFile) ofs << constructionKDTree[i] << " ";
 
         start = high_resolution_clock::now();
         Quadtree qt(AABB(Coordinates(minC, minC), Coordinates(maxC, maxC)));
@@ -62,6 +68,7 @@ void kdTreeQuadtreeComplexityAnalysis(u32 seed) {
         }
         end = high_resolution_clock::now();
         constructionQuadtree[i] = interval<microseconds>(start, end);
+        if (writeToFile) ofs << constructionQuadtree[i] << "\nNN\n";
 
         for (u32 _ = 0; _ < nnIterations; ++_) {
             Coordinates r(randDist(eng), randDist(eng));
@@ -73,16 +80,20 @@ void kdTreeQuadtreeComplexityAnalysis(u32 seed) {
             auto end = high_resolution_clock::now();
             auto us = interval<nanoseconds>(start, end);
             nnKDTree[i] += us;
+            if (writeToFile) ofs << us << " ";
 
             start = high_resolution_clock::now();
             qtr = qt.nearestNeighbor(r);
             end = high_resolution_clock::now();
             us = interval<nanoseconds>(start, end);
             nnQuadtree[i] += us;
+            if (writeToFile) ofs << us << "\n";
         }
         nnKDTree[i] /= nnIterations;
         nnQuadtree[i] /= nnIterations;
     }
+
+    ofs.close();
 
     cout << "Construction - O(n log n)\n";
     cout << string(50, '-') << "\n";
@@ -137,12 +148,12 @@ void quadtreeRealDataComplexityAnalysis(u32 seed) {
     cout << nnQuadtree << endl;
 }
 
-void heapComplexityAnalysis(u32 seed) {
+void heapComplexityAnalysis(u32 seed, bool writeToFile) {
     static const size_t size = 7;
     static const double minKey = 0, maxKey = 500;
     static const array<u32, size> numNodes = {1000, 5000, 10000,
         50000, 100000, 500000, 1000000};
-    static const u32 insertIters = 100, extractMinIters = 100,
+    static const u32 insertIters = 150, extractMinIters = 150,
         decreaseKeyIters = 250;
 
     srand(seed);
