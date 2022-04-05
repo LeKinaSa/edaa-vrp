@@ -8,6 +8,13 @@
 #include "../graph.hpp"
 #include "../types.hpp"
 
+struct ShortestPathResult {
+    std::list<u64> path;
+    double distance;
+};
+
+vector<ShortestPathResult> dijkstra(const Graph<OsmNode>& g, u64 start, const std::vector<u64>& endVec);
+
 std::pair<std::list<u64>, double> aStarSearch(const Graph<OsmNode>& g, u64 start, u64 end);
 
 std::pair<std::list<u64>, double> simpleMemoryBoundedAStarSearch(Graph<OsmNode> g, u64 start, u64 end, int maxSize);

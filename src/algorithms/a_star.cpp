@@ -1,11 +1,63 @@
 
 #include <algorithm>
 #include <map>
+#include <unordered_map>
 #include "a_star.hpp"
 #include "../data_structures/fibonacci_heap.hpp"
 #include "../utils.hpp"
 
 using namespace std;
+
+vector<ShortestPathResult> dijkstra(const Graph<OsmNode>& g, u64 start, const vector<u64>& endVec) {
+    vector<ShortestPathResult> res;
+    res.reserve(endVec.size());
+    if (endVec.empty()) return res;
+
+    FibonacciHeap<u64> heap;
+    unordered_map<u64, FHNode<u64>*> fibHeapNodes;
+    unordered_map<u64, u64> predecessorMap;
+    unordered_map<u64, double> distanceMap;
+
+    distanceMap[start] = 0;
+    fibHeapNodes[start] = heap.insert(start, 0);
+
+    u64 next;
+    double distance;
+
+    while (!heap.empty()) {
+        next = heap.extractMin();
+        for (const auto& edge : g.getEdges(next)) {
+            distance = distanceMap[next] + edge.second;
+            bool seen = distanceMap.count(edge.first) != 0;
+
+            if (!seen || distance < distanceMap[edge.first]) {
+                distanceMap[edge.first] = distance;
+                predecessorMap[edge.first] = next;
+
+                if (seen) {
+                    heap.decreaseKey(fibHeapNodes[edge.first], distance);
+                }
+                else {
+                    fibHeapNodes[edge.first] = heap.insert(edge.first, distance);
+                }
+            }
+        }
+    }
+
+    for (const auto& end : endVec) {
+        ShortestPathResult res;
+        res.distance = distanceMap[end];
+
+        u64 node = end;
+        res.path.push_front(node);
+        while (predecessorMap.count(node)) {
+            node = predecessorMap[node];
+            res.path.push_front(node);
+        }
+    }
+
+    return res;
+}
 
 pair<list<u64>, double> aStarSearch(const Graph<OsmNode>& g, u64 start, u64 end) {
     FibonacciHeap<u64> heap;
