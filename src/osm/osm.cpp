@@ -87,7 +87,6 @@ OsmXmlData parseOsmXml(const char* path) {
             }
         }
 
-
         way = way->NextSiblingElement("way");
     }
 

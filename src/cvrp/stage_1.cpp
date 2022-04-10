@@ -118,24 +118,36 @@ void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem,
 
     // We can't assume d[from, to] == d[to, from] since there are directed edges
     for (size_t from = 0; from < n; ++from) {
+        vector<u64> endVec;
         for (size_t to = 0; to < n; ++to) {
             if (from != to) {
-                auto start = high_resolution_clock::now();
-                pair<list<u64>, double> result = aStarSearch(
-                    osmData.graph,
-                    matchedPoint(from),
-                    matchedPoint(to)
-                );
-                auto end = high_resolution_clock::now();
-                if (printLogs) ofs << interval<chrono::microseconds>(start, end) << " ";
+                endVec.push_back(matchedPoint(to));
+            }
+        }
 
-                if (result.first.size() == 0) {
-                    // Couldn't find a path...
-                    problem.setDistance(from, to, DBL_MAX);
-                }
-                else {
-                    problem.setDistance(from, to, result.second);
-                }
+        auto start = high_resolution_clock::now();
+        vector<ShortestPathResult> resultVec = dijkstra(
+            osmData.graph,
+            matchedPoint(from),
+            endVec
+        );
+        auto end = high_resolution_clock::now();
+        if (printLogs) {
+            auto us = interval<chrono::microseconds>(start, end);
+            cout << "Finished Dijkstra for location " << from << " in " << us << "us." << endl;
+            ofs << us << " ";
+        }
+
+        for (size_t idx = 0; idx < resultVec.size(); ++idx) {
+            size_t to = idx >= from ? idx + 1 : idx;
+            const auto& result = resultVec[idx];
+
+            if (result.path.size() == 0) {
+                // Couldn't find a path...
+                problem.setDistance(from, to, DBL_MAX);
+            }
+            else {
+                problem.setDistance(from, to, result.distance);
             }
         }
     }
