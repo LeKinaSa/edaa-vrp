@@ -32,7 +32,9 @@ MapMatchingResult matchLocations(const OsmXmlData& osmData,
     if (dataStructure == QUADTREE) {
         Quadtree tree(AABB(osmData.minCoords, osmData.maxCoords));
         for (const pair<u64, const OsmNode&>& p : osmData.graph.getNodes()) {
-            tree.insert(p.second);
+            if (p.second.mapMatch) {
+                tree.insert(p.second);
+            }
         }
 
         start = high_resolution_clock::now();
@@ -63,7 +65,9 @@ MapMatchingResult matchLocations(const OsmXmlData& osmData,
         v.reserve(osmData.graph.getNodes().size());
 
         for (const pair<u64, const OsmNode&>& p : osmData.graph.getNodes()) {
-            v.push_back(p.second);
+            if (p.second.mapMatch) {
+                v.push_back(p.second);
+            }
         }
 
         KDTree tree(v);

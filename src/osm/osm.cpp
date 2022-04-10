@@ -51,14 +51,21 @@ OsmXmlData parseOsmXml(const char* path) {
         bool oneWay = false;
         bool valid = true;
 
+        bool highway = false, barrier = false, area = false; // For closed way logic
+
         const XMLElement* tag = way->FirstChildElement("tag");
         while (tag != nullptr) {
+            if (tag->Attribute("k", "highway")) highway = tag->Attribute("v");
+            if (tag->Attribute("k", "barrier")) barrier = tag->Attribute("v");
+            if (tag->Attribute("k", "area")) area = tag->Attribute("v", "yes");
+
             if (tag->Attribute("k", "oneway") && tag->Attribute("v", "yes")) {
                 oneWay = true;
             }
 
             if ((tag->Attribute("k", "access") && tag->Attribute("v", "no")) ||
-                (tag->Attribute("k", "highway") && invalidHighwayValues.count(tag->Attribute("v")) != 0)) {
+                (tag->Attribute("k", "highway") && invalidHighwayValues.count(tag->Attribute("v")) != 0) ||
+                tag->Attribute("k", "waterway")) {
                 valid = false;
             }
 
@@ -66,12 +73,17 @@ OsmXmlData parseOsmXml(const char* path) {
         }
 
         if (valid) {
+            list<u64> wayNodes;
+
             const XMLElement* n1 = way->FirstChildElement("nd");
             const XMLElement* n2 = n1->NextSiblingElement("nd");
 
+            u64 id1 = stoull(n1->Attribute("ref")), id2;
+            wayNodes.push_back(id1);
+
             while (n2 != nullptr) {
-                u64 id1 = stoull(n1->Attribute("ref")), 
-                    id2 = stoull(n2->Attribute("ref"));
+                id2 = stoull(n2->Attribute("ref"));
+                wayNodes.push_back(id2);
 
                 const OsmNode& data1 = data.graph.getNode(id1),
                     data2 = data.graph.getNode(id2);
@@ -83,11 +95,27 @@ OsmXmlData parseOsmXml(const char* path) {
                 }
 
                 n1 = n2;
+                id1 = id2;
                 n2 = n2->NextSiblingElement("nd");
+            }
+
+            if (wayNodes.front() == wayNodes.back()) {
+                if (!(highway || barrier) || area) {
+                    for (const auto& id : wayNodes) {
+                        data.graph.getNode(id).mapMatch = false;
+                    }
+                }
             }
         }
 
         way = way->NextSiblingElement("way");
+    }
+
+    // Do not include nodes with degree 0 in map matching
+    for (auto& p : data.graph.getNodes()) {
+        if (data.graph.getEdges(p.first).empty()) {
+            p.second.mapMatch = false;
+        }
     }
 
     return data;

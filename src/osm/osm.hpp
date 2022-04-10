@@ -8,6 +8,7 @@
 struct OsmNode {
     u64 id;
     Coordinates coordinates;
+    bool mapMatch = true;
 };
 
 struct OsmXmlData {

@@ -26,11 +26,19 @@ class Graph {
             return nodes.at(id);
         }
 
+        T& getNode(u64 id) {
+            return nodes.at(id);
+        }
+
         const std::list<std::pair<u64, double>>& getEdges(u64 id) const {
             return adjList.at(id);
         }
 
         const std::unordered_map<u64, T>& getNodes() const {
+            return nodes;
+        }
+
+        std::unordered_map<u64, T>& getNodes() {
             return nodes;
         }
 
