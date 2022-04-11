@@ -14,6 +14,7 @@ add_executable(${PROJECT_NAME}
     src/analysis/complexity.cpp
     src/cvrp/cvrp.cpp
     src/cvrp/stage_1.cpp
+    src/cvrp/visualization.cpp
     src/data_structures/quadtree.cpp
     src/data_structures/kd_tree.cpp
     src/osm/osm.cpp
