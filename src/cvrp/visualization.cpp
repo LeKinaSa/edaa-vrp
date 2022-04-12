@@ -23,6 +23,14 @@ GraphVisualizationResult generateGraphVisualization(const OsmXmlData& data, floa
     u64 eId = 0;
     for (const auto& nodeP : data.graph.getNodes()) {
         for (const auto& edgeP : data.graph.getEdges(nodeP.first)) {
+            if (result.edgeIds.count(edgeP.first)) {
+                if (result.edgeIds.at(edgeP.first).count(nodeP.first)) {
+                    // Edge is bidirectional, this prevents drawing it twice
+                    result.edgeIds[nodeP.first][edgeP.first] = result.edgeIds[edgeP.first][nodeP.first];
+                    continue;
+                }
+            }
+
             auto& edge = result.gv->addEdge(eId, result.gv->getNode(nodeP.first),
                 result.gv->getNode(edgeP.first));
             result.edgeIds[nodeP.first][edgeP.first] = eId;
