@@ -76,3 +76,20 @@ void showMapMatchingResults(GraphViewer& gv, const CvrpInstance& instance,
         edge.setColor(sf::Color::Blue);
     }
 }
+
+void highlightPath(GraphVisualizationResult& result, const list<u64>& path) {
+    GraphViewer& gv = result.gvRef();
+    const auto& edgeIds = result.edgeIds;
+
+    if (path.size() > 1) {
+        auto it = path.begin();
+        while (next(it) != path.end()) {
+            u64 edgeId = edgeIds.at(*it).at(*next(it));
+            auto& edge = gv.getEdge(edgeId);
+            edge.setThickness(10);
+            edge.setColor(sf::Color::Red);
+
+            ++it;
+        }
+    }
+}

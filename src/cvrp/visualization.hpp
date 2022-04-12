@@ -30,5 +30,6 @@ GraphVisualizationResult generateGraphVisualization(const OsmXmlData& data, floa
 void setGraphCenter(GraphViewer& gv, const Coordinates& coords, float scale = 200000.0);
 void showMapMatchingResults(GraphViewer& gv, const CvrpInstance& instance,
     const MapMatchingResult& result, float scale = 200000.0);
+void highlightPath(GraphVisualizationResult& result, const std::list<u64>& path);
 
 #endif // VISUALIZATION_H
