@@ -6,6 +6,8 @@
 #include <GraphViewerCpp/include/graphviewer.h>
 #include "../osm/osm.hpp"
 #include "../graph.hpp"
+#include "cvrp.hpp"
+#include "stage_1.hpp"
 
 struct GraphVisualizationResult {
     GraphViewer* gv;
@@ -18,9 +20,15 @@ struct GraphVisualizationResult {
     ~GraphVisualizationResult() {
         delete gv;
     }
+
+    GraphViewer& gvRef() {
+        return *gv;
+    }
 };
 
 GraphVisualizationResult generateGraphVisualization(const OsmXmlData& data, float scale = 200000.0);
 void setGraphCenter(GraphViewer& gv, const Coordinates& coords, float scale = 200000.0);
+void showMapMatchingResults(GraphViewer& gv, const CvrpInstance& instance,
+    const MapMatchingResult& result, float scale = 200000.0);
 
 #endif // VISUALIZATION_H
