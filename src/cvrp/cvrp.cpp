@@ -1,7 +1,8 @@
 
-#include "cvrp.hpp"
 #include <json/json.hpp>
 #include <fstream>
+#include "cvrp.hpp"
+#include "../utils.hpp"
 
 using namespace std;
 using json = nlohmann::json;
@@ -48,6 +49,31 @@ const vector<CvrpDelivery>& CvrpInstance::getDeliveries() const {
 
 const vector<vector<double>> CvrpInstance::getDistanceMatrix() const {
     return distanceMatrix;
+}
+
+void CvrpInstance::readDistanceMatrixFromFile(const char* path) {
+    ifstream ifs(path);
+
+    for (u32 row = 0; row < distanceMatrix.size(); ++row) {
+        for (u32 col = 0; col < distanceMatrix[row].size(); ++col) {
+            ifs >> distanceMatrix[row][col];
+        }
+    }
+
+    ifs.close();
+}
+
+void CvrpInstance::writeDistanceMatrixToFile(const char* path) const {
+    ofstream ofs(path);
+
+    for (const auto& row : distanceMatrix) {
+        for (double val : row) {
+            ofs << val << " ";
+        }
+        ofs << "\n";
+    }
+
+    ofs.close();
 }
 
 void CvrpInstance::setDistance(size_t from, size_t to, double distance) {
