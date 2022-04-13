@@ -21,6 +21,9 @@ class CvrpInstance {
         const std::vector<CvrpDelivery>& getDeliveries() const;
         const std::vector<std::vector<double>> getDistanceMatrix() const;
 
+        void readDistanceMatrixFromFile(const char* path);
+        void writeDistanceMatrixToFile(const char* path) const;
+
         void setDistance(size_t from, size_t to, double distance);
     private:
         double vehicleCapacity;

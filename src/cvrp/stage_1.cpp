@@ -1,6 +1,10 @@
 
 #include <chrono>
+#include <condition_variable>
 #include <fstream>
+#include <mutex>
+#include <queue>
+#include <thread>
 #include "stage_1.hpp"
 #include "../algorithms/a_star.hpp"
 #include "../data_structures/quadtree.hpp"
@@ -106,40 +110,73 @@ MapMatchingResult matchLocations(const OsmXmlData& osmData,
     return {originNode, deliveryNodes};
 }
 
-void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem,
-        const MapMatchingResult& mmResult, bool printLogs) {
-    static const char* filePath = "shortest_paths.txt";
-    ofstream ofs(filePath);
+struct DijkstraThreadData {
+    DijkstraThreadData(const OsmXmlData& osmData, CvrpInstance& problem,
+            const MapMatchingResult& mmResult, bool printLogs, ofstream& ofs) : osmData(osmData),
+            problem(problem), mmResult(mmResult), printLogs(printLogs),
+            aStdOut(cout), aOfs(ofs) {}
 
-    size_t n = 1 + problem.getDeliveries().size();
+    // Concurrency
+    bool terminated = false;
+    condition_variable cond;
+    mutex queueMutex;
+    queue<u64> jobQueue;
+    AtomicOStream aStdOut, aOfs;
 
-    auto matchedPoint = [mmResult](size_t idx) {
-        if (idx == 0) {
-            return mmResult.originNode;
+    // Data
+    const OsmXmlData& osmData;
+    CvrpInstance& problem;
+    const MapMatchingResult& mmResult;
+    bool printLogs;
+};
+
+size_t matchedPoint(const MapMatchingResult& mmResult, size_t idx) {
+    if (idx == 0) {
+        return mmResult.originNode;
+    }
+    return mmResult.deliveryNodes[idx - 1];
+}
+
+void dijkstraThreadJob(DijkstraThreadData* data) {
+    u64 from;
+    size_t n = 1 + data->problem.getDeliveries().size();
+
+    while (true) {
+        {
+            unique_lock<mutex> lock(data->queueMutex);
+
+            data->cond.wait(lock, [data] {
+                return !data->jobQueue.empty() || data->terminated;
+            });
+
+            if (data->jobQueue.empty()) {
+                // Pool terminated and no more jobs to run
+                return;
+            }
+
+            from = data->jobQueue.front();
+            data->jobQueue.pop();
         }
-        return mmResult.deliveryNodes[idx - 1];
-    };
 
-    // We can't assume d[from, to] == d[to, from] since there are directed edges
-    for (size_t from = 0; from < n; ++from) {
         vector<u64> endVec;
         for (size_t to = 0; to < n; ++to) {
             if (from != to) {
-                endVec.push_back(matchedPoint(to));
+                endVec.push_back(matchedPoint(data->mmResult, to));
             }
         }
 
         auto start = high_resolution_clock::now();
         vector<ShortestPathResult> resultVec = dijkstra(
-            osmData.graph,
-            matchedPoint(from),
+            data->osmData.graph,
+            matchedPoint(data->mmResult, from),
             endVec
         );
         auto end = high_resolution_clock::now();
-        if (printLogs) {
+        if (data->printLogs) {
             auto us = interval<chrono::microseconds>(start, end);
-            cout << "Finished Dijkstra for location " << from << " in " << us << "us." << endl;
-            ofs << us << " ";
+            data->aStdOut << "Finished Dijkstra for location " << from << " in " << us << "us." << "\n";
+            data->aStdOut.flush();
+            data->aOfs << us << " ";
         }
 
         for (size_t idx = 0; idx < resultVec.size(); ++idx) {
@@ -148,13 +185,49 @@ void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem,
 
             if (result.path.size() == 0) {
                 // Couldn't find a path...
-                problem.setDistance(from, to, DBL_MAX);
+                data->problem.setDistance(from, to, DBL_MAX);
             }
             else {
-                problem.setDistance(from, to, result.distance);
+                data->problem.setDistance(from, to, result.distance);
             }
         }
     }
+}
+
+void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem,
+        const MapMatchingResult& mmResult, bool printLogs, u32 numThreads) {
+    static const char* filePath = "shortest_paths.txt";
+    ofstream ofs(filePath);
+
+    // Multithreading support
+    DijkstraThreadData threadData(osmData, problem, mmResult, printLogs, ofs);
+
+    u32 hardwareThreads = thread::hardware_concurrency();
+    numThreads = min(numThreads, hardwareThreads);
+    vector<thread> threads;
+    threads.reserve(numThreads);
+    for (u32 _ = 0; _ < numThreads; ++_) {
+        threads.push_back(thread(dijkstraThreadJob, &threadData));
+    }
+
+    size_t n = 1 + problem.getDeliveries().size();
+
+    // We can't assume d[from, to] == d[to, from] since there are directed edges
+    for (size_t from = 0; from < n; ++from) {
+        {
+            unique_lock<mutex> lock(threadData.queueMutex);
+            threadData.jobQueue.push(from);
+        }
+        threadData.cond.notify_one();
+    } 
+
+    // Shutdown thread pool and join all threads
+    threadData.terminated = true;
+    threadData.cond.notify_all();
+    for (thread& t : threads) {
+        t.join();
+    }
+    threads.clear();
 
     ofs.close();
 }

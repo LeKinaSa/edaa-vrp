@@ -23,6 +23,6 @@ MapMatchingResult matchLocations(const OsmXmlData& osmData,
     bool printLogs = false);
 
 void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem,
-    const MapMatchingResult& mmResult, bool printLogs = false);
+    const MapMatchingResult& mmResult, bool printLogs = false, u32 numThreads = 1);
 
 #endif // CVRP_STAGE_1_H
