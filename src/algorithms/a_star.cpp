@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 #include "a_star.hpp"
 #include "../data_structures/binary_heap.hpp"
 #include "../data_structures/fibonacci_heap.hpp"
@@ -15,9 +16,12 @@ vector<ShortestPathResult> dijkstra(const Graph<OsmNode>& g, u64 start, const ve
     if (endVec.empty()) return resultVec;
 
     BinaryHeap<u64> heap;
+    unordered_set<u64> endNodes;
     unordered_map<u64, BHNode<u64>*> fibHeapNodes;
     unordered_map<u64, u64> predecessorMap;
     unordered_map<u64, double> distanceMap;
+
+    endNodes.insert(endVec.begin(), endVec.end());
 
     distanceMap[start] = 0;
     fibHeapNodes[start] = heap.insert(start, 0);
@@ -25,8 +29,10 @@ vector<ShortestPathResult> dijkstra(const Graph<OsmNode>& g, u64 start, const ve
     u64 next;
     double distance;
 
-    while (!heap.empty()) {
+    while (!heap.empty() && !endNodes.empty()) {
         next = *heap.extractMin();
+        endNodes.erase(next);
+
         for (const auto& edge : g.getEdges(next)) {
             distance = distanceMap[next] + edge.second;
             bool seen = distanceMap.count(edge.first) != 0;
