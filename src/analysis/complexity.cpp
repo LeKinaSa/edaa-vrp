@@ -254,7 +254,7 @@ void heapComplexityAnalysis(u32 seed, bool writeToFile) {
     if (writeToFile) ofs << "DK\n>" << numNodes[current] << "\n";
     {
         BinaryHeap<bool> binHeap;
-        vector<BHNode<bool>*> vBin;
+        vector<u64> vBin;
         vBin.reserve(*numNodes.rbegin());
         
         FibonacciHeap<bool> fibHeap;
@@ -273,8 +273,8 @@ void heapComplexityAnalysis(u32 seed, bool writeToFile) {
                 }
 
                 for (u32 _ = 0; _ < decreaseKeyIters; ++_) {
-                    size_t idx = rand() % vBin.size();
-                    uniform_real_distribution<double> tempDist(minKey, vBin[idx]->key);
+                    size_t idx = rand() % vFib.size();
+                    uniform_real_distribution<double> tempDist(minKey, vFib[idx]->key);
                     double newKey = tempDist(eng);
 
                     auto start = high_resolution_clock::now();

@@ -17,20 +17,20 @@ vector<ShortestPathResult> dijkstra(const Graph<OsmNode>& g, u64 start, const ve
 
     BinaryHeap<u64> heap;
     unordered_set<u64> endNodes;
-    unordered_map<u64, BHNode<u64>*> fibHeapNodes;
+    unordered_map<u64, u64> binHeapNodes;
     unordered_map<u64, u64> predecessorMap;
     unordered_map<u64, double> distanceMap;
 
     endNodes.insert(endVec.begin(), endVec.end());
 
     distanceMap[start] = 0;
-    fibHeapNodes[start] = heap.insert(start, 0);
+    binHeapNodes[start] = heap.insert(start, 0);
 
     u64 next;
     double distance;
 
     while (!heap.empty() && !endNodes.empty()) {
-        next = *heap.extractMin();
+        next = heap.extractMin();
         endNodes.erase(next);
 
         for (const auto& edge : g.getEdges(next)) {
@@ -42,10 +42,10 @@ vector<ShortestPathResult> dijkstra(const Graph<OsmNode>& g, u64 start, const ve
                 predecessorMap[edge.first] = next;
 
                 if (seen) {
-                    heap.decreaseKey(fibHeapNodes[edge.first], distance);
+                    heap.decreaseKey(binHeapNodes[edge.first], distance);
                 }
                 else {
-                    fibHeapNodes[edge.first] = heap.insert(edge.first, distance);
+                    binHeapNodes[edge.first] = heap.insert(edge.first, distance);
                 }
             }
         }
