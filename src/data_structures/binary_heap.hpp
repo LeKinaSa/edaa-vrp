@@ -19,6 +19,10 @@ struct BHNode {
 template <typename T>
 class BinaryHeap {
     public:
+        explicit BinaryHeap(size_t reserveSize = 0) {
+            vec.reserve(reserveSize);
+        }
+
         u64 insert(T data, double key) {
             size_t index = vec.size();
             u64 id = nextId;

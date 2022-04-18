@@ -180,7 +180,7 @@ void heapComplexityAnalysis(u32 seed, bool writeToFile) {
     u32 current = 0;
     if (writeToFile) ofs << "I\n>" << numNodes[current] << "\n";
     {
-        BinaryHeap<bool> binHeap;
+        BinaryHeap<bool> binHeap(8192);
         FibonacciHeap<bool> fibHeap;
         for (u32 i = 0; i <= *numNodes.rbegin(); ++i) {
             double key = randDist(eng);

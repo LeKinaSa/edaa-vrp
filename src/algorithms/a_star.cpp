@@ -15,7 +15,7 @@ vector<ShortestPathResult> dijkstra(const Graph<OsmNode>& g, u64 start, const ve
     resultVec.reserve(endVec.size());
     if (endVec.empty()) return resultVec;
 
-    BinaryHeap<u64> heap;
+    BinaryHeap<u64> heap(8192);
     unordered_set<u64> endNodes;
     unordered_map<u64, u64> binHeapNodes;
     unordered_map<u64, u64> predecessorMap;
