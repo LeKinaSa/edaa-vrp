@@ -26,6 +26,7 @@ class BinaryHeap {
         u64 insert(T data, double key) {
             size_t index = vec.size();
             u64 id = nextId;
+            ++nextId;
 
             vec.push_back({id, data, key});
             indices[id] = index;
