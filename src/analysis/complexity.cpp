@@ -26,7 +26,7 @@ void kdTreeQuadtreeComplexityAnalysis(u32 seed, bool writeToFile) {
     static const double minC = -75, maxC = 75;
     static const array<u32, size> numPoints = {100, 500, 1000, 2500, 5000, 10000,
         25000, 50000, 100000, 250000, 500000, 1000000};
-    static const u32 cIterations = 10, nnIterations = 10000;
+    static const u32 cIterations = 20, nnIterations = 10000;
     static const char* fileName = "tree_ca.txt";
 
     ofstream ofs(fileName);
@@ -159,12 +159,12 @@ void quadtreeRealDataComplexityAnalysis(u32 seed) {
 }
 
 void heapComplexityAnalysis(u32 seed, bool writeToFile) {
-    static const size_t size = 7;
+    static const size_t size = 8;
     static const double minKey = 0, maxKey = 500;
-    static const array<u32, size> numNodes = {5000, 10000, 25000,
-        50000, 100000, 500000, 1000000};
-    static const u32 insertIters = 400, extractMinIters = 400,
-        decreaseKeyIters = 800;
+    static const array<u32, size> numNodes = {10000, 25000, 50000, 100000, 
+        250000, 500000, 750000, 1000000};
+    static const u32 insertIters = 500, extractMinIters = 5000,
+        decreaseKeyIters = 1000;
     static const char* fileName = "heap_ca.txt";
 
     ofstream ofs(fileName);
