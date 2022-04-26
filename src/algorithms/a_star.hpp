@@ -8,13 +8,15 @@
 #include "../osm/osm.hpp"
 #include "../graph.hpp"
 #include "../types.hpp"
+#include "../cvrp/stage_1.hpp"
 
 struct ShortestPathResult {
     std::list<u64> path;
     double distance;
 };
 
-std::vector<ShortestPathResult> dijkstra(const Graph<OsmNode>& g, u64 start, const std::vector<u64>& endVec);
+std::vector<ShortestPathResult> dijkstra(const Graph<OsmNode>& g, u64 start,
+    const std::vector<u64>& endVec, ShortestPathDataStructure dataStructure);
 
 std::pair<std::list<u64>, double> aStarSearch(const Graph<OsmNode>& g, u64 start, u64 end);
 

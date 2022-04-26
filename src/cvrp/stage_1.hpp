@@ -17,12 +17,18 @@ struct MapMatchingResult {
     std::vector<u64> deliveryNodes;
 };
 
+enum ShortestPathDataStructure {
+    FIBONACCI_HEAP,
+    BINARY_HEAP,
+};
+
 // Maps LoggiBUD location IDs to the IDs of nodes in the OSM network
 MapMatchingResult matchLocations(const OsmXmlData& osmData,
     const CvrpInstance& problem, MapMatchingDataStructure dataStructure = KD_TREE,
     bool printLogs = false);
 
 void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem,
-    const MapMatchingResult& mmResult, bool printLogs = false, u32 numThreads = 1);
+    const MapMatchingResult& mmResult, ShortestPathDataStructure dataStructure = FIBONACCI_HEAP,
+    bool printLogs = false, u32 numThreads = 1);
 
 #endif // CVRP_STAGE_1_H

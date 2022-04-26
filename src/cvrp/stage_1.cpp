@@ -137,7 +137,7 @@ size_t matchedPoint(const MapMatchingResult& mmResult, size_t idx) {
     return mmResult.deliveryNodes[idx - 1];
 }
 
-void dijkstraThreadJob(DijkstraThreadData* data) {
+void dijkstraThreadJob(DijkstraThreadData* data, ShortestPathDataStructure dataStructure) {
     u64 from;
     size_t n = 1 + data->problem.getDeliveries().size();
 
@@ -169,7 +169,8 @@ void dijkstraThreadJob(DijkstraThreadData* data) {
         vector<ShortestPathResult> resultVec = dijkstra(
             data->osmData.graph,
             matchedPoint(data->mmResult, from),
-            endVec
+            endVec,
+            dataStructure
         );
         auto end = high_resolution_clock::now();
         if (data->printLogs) {
@@ -195,7 +196,8 @@ void dijkstraThreadJob(DijkstraThreadData* data) {
 }
 
 void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem,
-        const MapMatchingResult& mmResult, bool printLogs, u32 numThreads) {
+        const MapMatchingResult& mmResult, ShortestPathDataStructure dataStructure,
+        bool printLogs, u32 numThreads) {
     static const char* filePath = "shortest_paths.txt";
     ofstream ofs(filePath);
 
@@ -207,7 +209,7 @@ void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem,
     vector<thread> threads;
     threads.reserve(numThreads);
     for (u32 _ = 0; _ < numThreads; ++_) {
-        threads.push_back(thread(dijkstraThreadJob, &threadData));
+        threads.push_back(thread(dijkstraThreadJob, &threadData, dataStructure));
     }
 
     size_t n = 1 + problem.getDeliveries().size();

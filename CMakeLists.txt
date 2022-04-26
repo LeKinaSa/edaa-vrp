@@ -12,6 +12,7 @@ add_executable(${PROJECT_NAME}
     src/main.cpp
     src/algorithms/a_star.cpp
     src/analysis/complexity.cpp
+    src/analysis/real_data.cpp
     src/cvrp/cvrp.cpp
     src/cvrp/stage_1.cpp
     src/cvrp/visualization.cpp

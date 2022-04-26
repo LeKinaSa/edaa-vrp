@@ -10,7 +10,10 @@
 
 using namespace std;
 
-vector<ShortestPathResult> dijkstra(const Graph<OsmNode>& g, u64 start, const vector<u64>& endVec) {
+vector<ShortestPathResult> dijkstra(const Graph<OsmNode>& g, u64 start,
+        const vector<u64>& endVec, ShortestPathDataStructure dataStructure) {
+    bool bin = dataStructure == BINARY_HEAP;
+
     vector<ShortestPathResult> resultVec;
     resultVec.reserve(endVec.size());
     if (endVec.empty()) return resultVec;
@@ -27,13 +30,17 @@ vector<ShortestPathResult> dijkstra(const Graph<OsmNode>& g, u64 start, const ve
     endNodes.insert(endVec.begin(), endVec.end());
 
     distanceMap[start] = 0;
-    binHeapNodes[start] = binHeap.insert(start, 0);
+    
+    if (bin)
+        binHeapNodes[start] = binHeap.insert(start, 0);
+    else
+        fibHeapNodes[start] = fibHeap.insert(start, 0);
 
     u64 next;
     double distance;
 
-    while (!binHeap.empty() && !endNodes.empty()) {
-        next = binHeap.extractMin();
+    while (!((bin && binHeap.empty()) || (!bin && fibHeap.empty())) && !endNodes.empty()) {
+        next = bin ? binHeap.extractMin() : fibHeap.extractMin();
         endNodes.erase(next);
 
         for (const auto& edge : g.getEdges(next)) {
@@ -45,10 +52,15 @@ vector<ShortestPathResult> dijkstra(const Graph<OsmNode>& g, u64 start, const ve
                 predecessorMap[edge.first] = next;
 
                 if (seen) {
-                    binHeap.decreaseKey(binHeapNodes[edge.first], distance);
+                    bin ?
+                        binHeap.decreaseKey(binHeapNodes[edge.first], distance) :
+                        fibHeap.decreaseKey(fibHeapNodes[edge.first], distance);
                 }
                 else {
-                    binHeapNodes[edge.first] = binHeap.insert(edge.first, distance);
+                    if (bin)
+                        binHeapNodes[edge.first] = binHeap.insert(edge.first, distance);
+                    else
+                        fibHeapNodes[edge.first] = fibHeap.insert(edge.first, distance);
                 }
             }
         }
@@ -56,13 +68,20 @@ vector<ShortestPathResult> dijkstra(const Graph<OsmNode>& g, u64 start, const ve
 
     for (const auto& end : endVec) {
         ShortestPathResult result;
-        result.distance = distanceMap[end];
 
-        u64 node = end;
-        result.path.push_front(node);
-        while (predecessorMap.count(node)) {
-            node = predecessorMap[node];
+        if (end == start) {
+            result.path.push_front(end);
+            result.path.push_front(start);
+        }
+        else if (predecessorMap.count(end)) {
+            result.distance = distanceMap[end];
+
+            u64 node = end;
             result.path.push_front(node);
+            while (predecessorMap.count(node)) {
+                node = predecessorMap[node];
+                result.path.push_front(node);
+            }
         }
 
         resultVec.push_back(result);
