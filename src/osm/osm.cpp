@@ -48,29 +48,25 @@ OsmXmlData parseOsmXml(const char* path) {
 
     const XMLElement* way = root->FirstChildElement("way");
     while (way != nullptr) {
-        bool oneWay = false;
-        bool valid = true;
-
-        bool highway = false, barrier = false, area = false; // For closed way logic
+        bool oneWay = false, valid = true, highway = false;
 
         const XMLElement* tag = way->FirstChildElement("tag");
         while (tag != nullptr) {
-            if (tag->Attribute("k", "highway")) highway = tag->Attribute("v");
-            if (tag->Attribute("k", "barrier")) barrier = tag->Attribute("v");
-            if (tag->Attribute("k", "area")) area = tag->Attribute("v", "yes");
+            if (tag->Attribute("k", "highway")) highway = true;
 
             if (tag->Attribute("k", "oneway") && tag->Attribute("v", "yes")) {
                 oneWay = true;
             }
 
             if ((tag->Attribute("k", "access") && tag->Attribute("v", "no")) ||
-                (tag->Attribute("k", "highway") && invalidHighwayValues.count(tag->Attribute("v")) != 0) ||
-                tag->Attribute("k", "waterway")) {
+                (tag->Attribute("k", "highway") && invalidHighwayValues.count(tag->Attribute("v")) != 0)) {
                 valid = false;
             }
 
             tag = tag->NextSiblingElement("tag");
         }
+
+        if (!highway) valid = false;
 
         if (valid) {
             list<u64> wayNodes;
@@ -97,14 +93,6 @@ OsmXmlData parseOsmXml(const char* path) {
                 n1 = n2;
                 id1 = id2;
                 n2 = n2->NextSiblingElement("nd");
-            }
-
-            if (wayNodes.front() == wayNodes.back()) {
-                if (!(highway || barrier) || area) {
-                    for (const auto& id : wayNodes) {
-                        data.graph.getNode(id).mapMatch = false;
-                    }
-                }
             }
         }
 
