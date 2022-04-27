@@ -52,3 +52,32 @@ void shortestPathDataStructureAnalysis() {
         printPaths(data, instance, result, FIBONACCI_HEAP);
     }
 }
+
+void parallelismAnalysis() {
+    auto printPaths = [](const OsmXmlData& data, CvrpInstance& instance,
+            const MapMatchingResult& result, ShortestPathDataStructure dataStructure,
+            size_t numThreads, const string& filePath) {
+        auto start = high_resolution_clock::now();
+        calculateShortestPaths(data, instance, result, dataStructure, true, numThreads, filePath);
+        auto end = high_resolution_clock::now();
+
+        cout << interval<chrono::milliseconds>(start, end) << endl;
+    };
+
+    OsmXmlData data = parseOsmXml("../cvrp_belem.xml");
+    ifstream ifs("../cvrp-0-pa-34.json");
+    CvrpInstance instance(ifs);
+    MapMatchingResult result = matchLocations(data, instance, KD_TREE, true);
+
+    cout << "FIBONACCI HEAP\n--------------\n";
+    for (size_t i = 1; i <= 24; ++i) {
+        cout << "[ " << i << " THREADS ] - ";
+        printPaths(data, instance, result, FIBONACCI_HEAP, i, "shortest_paths_f" + to_string(i) + ".txt");
+    }
+
+    cout << "BINARY HEAP\n-----------\n";
+    for (size_t i = 1; i <= 24; ++i) {
+        cout << "[ " << i << " THREADS ] - ";
+        printPaths(data, instance, result, BINARY_HEAP, i, "shortest_paths_b" + to_string(i) + ".txt");
+    }
+}

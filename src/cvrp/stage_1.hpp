@@ -29,6 +29,6 @@ MapMatchingResult matchLocations(const OsmXmlData& osmData,
 
 void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem,
     const MapMatchingResult& mmResult, ShortestPathDataStructure dataStructure = FIBONACCI_HEAP,
-    bool printLogs = false, u32 numThreads = 1);
+    bool printLogs = false, u32 numThreads = 1, const std::string& filePath = "shortest_paths.txt");
 
 #endif // CVRP_STAGE_1_H

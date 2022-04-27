@@ -197,8 +197,7 @@ void dijkstraThreadJob(DijkstraThreadData* data, ShortestPathDataStructure dataS
 
 void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem,
         const MapMatchingResult& mmResult, ShortestPathDataStructure dataStructure,
-        bool printLogs, u32 numThreads) {
-    static const char* filePath = "shortest_paths.txt";
+        bool printLogs, u32 numThreads, const string& filePath) {
     ofstream ofs(filePath);
 
     // Multithreading support
