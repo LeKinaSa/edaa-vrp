@@ -203,8 +203,6 @@ void calculateShortestPaths(const OsmXmlData& osmData, CvrpInstance& problem,
     // Multithreading support
     DijkstraThreadData threadData(osmData, problem, mmResult, printLogs, ofs);
 
-    u32 hardwareThreads = thread::hardware_concurrency();
-    numThreads = min(numThreads, hardwareThreads);
     vector<thread> threads;
     threads.reserve(numThreads);
     for (u32 _ = 0; _ < numThreads; ++_) {

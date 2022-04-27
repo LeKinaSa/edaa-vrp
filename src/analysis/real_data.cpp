@@ -54,14 +54,14 @@ void shortestPathDataStructureAnalysis() {
 }
 
 void parallelismAnalysis() {
-    auto printPaths = [](const OsmXmlData& data, CvrpInstance& instance,
+    auto calcPaths = [](const OsmXmlData& data, CvrpInstance& instance,
             const MapMatchingResult& result, ShortestPathDataStructure dataStructure,
             size_t numThreads, const string& filePath) {
         auto start = high_resolution_clock::now();
         calculateShortestPaths(data, instance, result, dataStructure, true, numThreads, filePath);
         auto end = high_resolution_clock::now();
 
-        cout << interval<chrono::milliseconds>(start, end) << endl;
+        return interval<chrono::milliseconds>(start, end);
     };
 
     OsmXmlData data = parseOsmXml("../cvrp_belem.xml");
@@ -69,15 +69,19 @@ void parallelismAnalysis() {
     CvrpInstance instance(ifs);
     MapMatchingResult result = matchLocations(data, instance, KD_TREE, true);
 
+    ofstream fibOfs("sp_fib_total.txt"), binOfs("sp_bin_total.txt");
+
     cout << "FIBONACCI HEAP\n--------------\n";
-    for (size_t i = 1; i <= 24; ++i) {
-        cout << "[ " << i << " THREADS ] - ";
-        printPaths(data, instance, result, FIBONACCI_HEAP, i, "shortest_paths_f" + to_string(i) + ".txt");
+    for (size_t i = 1; i <= 16; ++i) {
+        auto ms = calcPaths(data, instance, result, FIBONACCI_HEAP, i, "shortest_paths_f" + to_string(i) + ".txt");
+        cout << "[ " << i << " THREADS ] - " << ms << "\n";
+        fibOfs << ms << " ";
     }
 
     cout << "BINARY HEAP\n-----------\n";
-    for (size_t i = 1; i <= 24; ++i) {
-        cout << "[ " << i << " THREADS ] - ";
-        printPaths(data, instance, result, BINARY_HEAP, i, "shortest_paths_b" + to_string(i) + ".txt");
+    for (size_t i = 1; i <= 16; ++i) {
+        auto ms = calcPaths(data, instance, result, BINARY_HEAP, i, "shortest_paths_b" + to_string(i) + ".txt");
+        cout << "[ " << i << " THREADS ] - " << ms << "\n";
+        binOfs << ms << " ";
     }
 }

@@ -50,3 +50,5 @@ build/*
 
 *.xml
 *.json
+
+scripts/**/*.txt
