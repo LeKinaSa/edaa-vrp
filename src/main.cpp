@@ -1,4 +1,6 @@
 #include <iostream>
+#include <filesystem>
+#include <fstream>
 
 #include <GraphViewerCpp/include/graphviewer.h>
 #include <cxxopts/cxxopts.hpp>
@@ -23,6 +25,7 @@ int main(int argc, char** argv) {
         ("vsp", "[OPT] Visualize shortest paths (for depot point)")
         ("t,threads", "[OPT] Number of threads to use in shortest path calculation", cxxopts::value<u32>()->default_value("1"))
         ("h,help", "[OPT] Print usage")
+        ("l,logs", "[OPT] Enable additional execution logs")
         ;
 
     auto result = opts.parse(argc, argv);
@@ -32,11 +35,28 @@ int main(int argc, char** argv) {
         exit(0);
     }
 
+    bool logs = result["logs"].as<bool>();
+    u32 threads = result["threads"].as<u32>();
+
     if (result.count("cvrp") && result.count("osm")) {
-        // TODO
+        string cvrpPath = result["cvrp"].as<string>(),
+            osmPath = result["osm"].as<string>();
+
+        if (!filesystem::is_regular_file(cvrpPath) || !filesystem::is_regular_file(osmPath)) {
+            cerr << "Error: `cvrp` and `osm` must be paths to regular files." << endl;
+            exit(1);
+        }
+
+        OsmXmlData data = parseOsmXml(osmPath.c_str());
+        ifstream ifs(cvrpPath);
+        CvrpInstance instance(ifs);
+
+        MapMatchingResult mmResult = matchLocations(data, instance, KD_TREE, logs);
+        calculateShortestPaths(data, instance, mmResult, FIBONACCI_HEAP, logs, threads);
     }
     else {
         cerr << "Error: `cvrp` and `osm` options are required." << endl;
+        exit(1);
     }
 
     return 0;
