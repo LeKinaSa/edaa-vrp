@@ -16,9 +16,10 @@
 
 **Internal Dependencies** (are already included in the project; their installation is not required)
 
-- `nhlomann/json`: C++ library for parsing JSON files
-- `tinyxml2`: C++ library for parsing XML files
+- `nlohmann/json`: C++ library for parsing JSON files ([GitHub](https://github.com/nlohmann/json))
+- `tinyxml2`: C++ library for parsing XML files([GitHub](https://github.com/leethomason/tinyxml2))
 - `GraphViewerCpp`: C++ reimplementation of GraphViewer by [@dmfrodrigues](https://github.com/dmfrodrigues/GraphViewerCpp)
+- `cxxopts`: Lightweight command line argument library ([GitHub](https://github.com/jarro2783/cxxopts))
 
 ### Building the Project
 
