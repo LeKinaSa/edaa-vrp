@@ -1,83 +1,43 @@
 #include <iostream>
-#include "algorithms/a_star.hpp"
-#include "data_structures/fibonacci_heap.hpp"
-#include "data_structures/quadtree.hpp"
-#include "data_structures/kd_tree.hpp"
-#include "coordinates.hpp"
-#include "graph.hpp"
+
+#include <GraphViewerCpp/include/graphviewer.h>
+#include <cxxopts/cxxopts.hpp>
+
+#include "analysis/complexity.hpp"
+#include "analysis/real_data.hpp"
+#include "cvrp/cvrp.hpp"
+#include "cvrp/stage_1.hpp"
+#include "cvrp/visualization.hpp"
+#include "utils.hpp"
 
 using namespace std;
 
-Graph<OsmNode> getGraph() {
-    Graph<OsmNode> g;
+int main(int argc, char** argv) {
+    cxxopts::Options opts("LoggiCVRP", "Solver for large CVRP instances from the LoggiBUD dataset");
 
-    Coordinates c0(0, 0), c1(4, 0), c2(8.5, 3.8), c3(7.3, 7.8),
-            c4(1, 2.8), c5(3.8, 6), c6(0, 10.8);
+    opts.allow_unrecognised_options()
+        .add_options()
+        ("cvrp", "[REQ] Path to CVRP JSON file", cxxopts::value<string>())
+        ("osm", "[REQ] Path to OSM XML file", cxxopts::value<string>())
+        ("vmm", "[OPT] Visualize map matching")
+        ("vsp", "[OPT] Visualize shortest paths (for depot point)")
+        ("t,threads", "[OPT] Number of threads to use in shortest path calculation", cxxopts::value<u32>()->default_value("1"))
+        ("h,help", "[OPT] Print usage")
+        ;
 
-    OsmNode n0 = {0, c0}, n1 = {1, c1}, n2 = {2, c2}, n3 = {3, c3}, n4 = {4, c4},
-            n5 = {5, c5}, n6 = {6, c6};
+    auto result = opts.parse(argc, argv);
 
-    g.addNode(0, n0);
-    g.addNode(1, n1);
-    g.addNode(2, n2);
-    g.addNode(3, n3);
-    g.addNode(4, n4);
-    g.addNode(5, n5);
-    g.addNode(6, n6);
-
-    g.addEdge(0, 1, c0.haversine(c1));
-    g.addEdge(1, 2, c1.haversine(c2));
-    g.addEdge(2, 3, c2.haversine(c3));
-    g.addEdge(0, 4, c0.haversine(c4));
-    g.addEdge(4, 5, c4.haversine(c5));
-    g.addEdge(5, 6, c5.haversine(c6));
-    g.addEdge(6, 3, c6.haversine(c3));
-
-    return g;
-}
-
-void aStarTest() {
-    // Obtain the Graph to be used in the A* Search
-    Graph<OsmNode> g = getGraph();
-
-    // Deciding the Start Node
-    u64 start = 0;
-    // Deciding the End Node
-    u64 end = 3;
-
-    // Search
-    pair<list<u64>, double> result;
-
-    // A* Search
-    cout << endl << "A* Search" << endl;
-    result = aStarSearch(g, start, end);
-    
-    for (auto element : result.first) {
-        cout << element << "\t";
+    if (result.arguments().empty() || result.count("help")) {
+        cout << opts.help() << endl;
+        exit(0);
     }
-    cout << endl << result.second << endl;
 
-    // Iterative Deepening A* Search
-    cout << endl << "Iterative Deepening A* Search" << endl;
-    result = iterativeDeepeningAStarSearch(g, start, end);
-    
-    for (auto element : result.first) {
-        cout << element << "\t";
+    if (result.count("cvrp") && result.count("osm")) {
+        // TODO
     }
-    cout << endl << result.second << endl;
-
-    // Simplified Memory Bound A* Search
-    cout << endl << "Simplified Memory Bound A* Search" << endl;
-    result = simpleMemoryBoundedAStarSearch(g, start, end, 2);
-    
-    for (auto element : result.first) {
-        cout << element << "\t";
+    else {
+        cerr << "Error: `cvrp` and `osm` options are required." << endl;
     }
-    cout << endl << result.second << endl;
-}
-
-int main() {
-    //aStarTest();
 
     return 0;
 }
