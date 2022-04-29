@@ -4,6 +4,7 @@
 #include <GraphViewerCpp/include/graphviewer.h>
 #include <cxxopts/cxxopts.hpp>
 
+#include "algorithms/a_star.hpp"
 #include "analysis/complexity.hpp"
 #include "analysis/real_data.hpp"
 #include "cvrp/cvrp.hpp"
@@ -66,9 +67,12 @@ int main(int argc, char** argv) {
         GraphViewer& gv = gvr.gvRef();
 
         MapMatchingResult mmResult = matchLocations(data, instance, mmDataStructure, logs);
+        showMapMatchingResults(gv, instance, mmResult);
+        setGraphCenter(gv, instance.getOrigin());
+        gv.setZipEdges(true);
+        gv.setEnabledEdgesText(false);
+
         if (mmVis) {
-            showMapMatchingResults(gv, instance, mmResult);
-            setGraphCenter(gv, instance.getOrigin());
             gv.createWindow(1280, 720);
             gv.join();
             gv.closeWindow();
@@ -76,7 +80,17 @@ int main(int argc, char** argv) {
 
         calculateShortestPaths(data, instance, mmResult, spDataStructure, logs, threads);
         if (spVis) {
-            
+            vector<ShortestPathResult> spResult = dijkstra(data.graph,
+                mmResult.originNode, mmResult.deliveryNodes, spDataStructure);
+
+            for (const auto& [path, _] : spResult) {
+                highlightPath(gvr, path);
+            }
+            gv.setZipEdges(true);
+
+            gv.createWindow(1280, 720);
+            gv.join();
+            gv.closeWindow();
         }
     }
     else {

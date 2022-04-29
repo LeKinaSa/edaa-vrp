@@ -33,6 +33,7 @@ GraphVisualizationResult generateGraphVisualization(const OsmXmlData& data, floa
 
             auto& edge = result.gv->addEdge(eId, result.gv->getNode(nodeP.first),
                 result.gv->getNode(edgeP.first));
+            edge.setThickness(8);
             result.edgeIds[nodeP.first][edgeP.first] = eId;
             ++eId;
         }
@@ -85,7 +86,7 @@ void showMapMatchingResults(GraphViewer& gv, const CvrpInstance& instance,
     }
 }
 
-void highlightPath(GraphVisualizationResult& result, const list<u64>& path) {
+void highlightPath(GraphVisualizationResult& result, const list<u64>& path, const sf::Color& color) {
     GraphViewer& gv = result.gvRef();
     const auto& edgeIds = result.edgeIds;
 
@@ -94,8 +95,8 @@ void highlightPath(GraphVisualizationResult& result, const list<u64>& path) {
         while (next(it) != path.end()) {
             u64 edgeId = edgeIds.at(*it).at(*next(it));
             auto& edge = gv.getEdge(edgeId);
-            edge.setThickness(10);
-            edge.setColor(sf::Color::Red);
+            edge.setThickness(15);
+            edge.setColor(color);
 
             ++it;
         }
