@@ -16,7 +16,8 @@ using namespace std;
 int main(int argc, char** argv) {
     cxxopts::Options opts("LoggiCVRP", "Solver for large CVRP instances from the LoggiBUD dataset");
 
-    opts.allow_unrecognised_options()
+    opts.set_width(100)
+        .allow_unrecognised_options()
         .add_options()
         ("cvrp", "[REQ] Path to CVRP JSON file", cxxopts::value<string>())
         ("osm", "[REQ] Path to OSM XML file", cxxopts::value<string>())
@@ -25,6 +26,8 @@ int main(int argc, char** argv) {
         ("t,threads", "[OPT] Number of threads to use in shortest path calculation", cxxopts::value<u32>()->default_value("1"))
         ("h,help", "[OPT] Print usage")
         ("l,logs", "[OPT] Enable additional execution logs")
+        ("quadtree", "[OPT] Use quadtrees instead of k-d trees for map matching")
+        ("bin-heap", "[OPT] Use binary heaps instead of Fibonacci heaps for Dijkstra's algorithm")
         ;
 
     auto result = opts.parse(argc, argv);
@@ -38,6 +41,9 @@ int main(int argc, char** argv) {
     u32 threads = result["threads"].as<u32>();
 
     bool mmVis = result["vmm"].as<bool>(), spVis = result["vsp"].as<bool>();
+    
+    MapMatchingDataStructure mmDataStructure = result["quadtree"].as<bool>() ? QUADTREE : KD_TREE;
+    ShortestPathDataStructure spDataStructure = result["bin-heap"].as<bool>() ? BINARY_HEAP : FIBONACCI_HEAP;
 
     if (result.count("cvrp") && result.count("osm")) {
         string cvrpPath = result["cvrp"].as<string>(),
@@ -59,7 +65,7 @@ int main(int argc, char** argv) {
         GraphVisualizationResult gvr = generateGraphVisualization(data);
         GraphViewer& gv = gvr.gvRef();
 
-        MapMatchingResult mmResult = matchLocations(data, instance, KD_TREE, logs);
+        MapMatchingResult mmResult = matchLocations(data, instance, mmDataStructure, logs);
         if (mmVis) {
             showMapMatchingResults(gv, instance, mmResult);
             setGraphCenter(gv, instance.getOrigin());
@@ -68,7 +74,7 @@ int main(int argc, char** argv) {
             gv.closeWindow();
         }
 
-        calculateShortestPaths(data, instance, mmResult, FIBONACCI_HEAP, logs, threads);
+        calculateShortestPaths(data, instance, mmResult, spDataStructure, logs, threads);
         if (spVis) {
             
         }
