@@ -1,5 +1,4 @@
 #include <iostream>
-#include <filesystem>
 #include <fstream>
 
 #include <GraphViewerCpp/include/graphviewer.h>
@@ -44,9 +43,13 @@ int main(int argc, char** argv) {
         string cvrpPath = result["cvrp"].as<string>(),
             osmPath = result["osm"].as<string>();
 
-        if (!filesystem::is_regular_file(cvrpPath) || !filesystem::is_regular_file(osmPath)) {
-            cerr << "Error: `cvrp` and `osm` must be paths to regular files." << endl;
-            exit(1);
+        {
+            ifstream i1(cvrpPath), i2(osmPath);
+
+            if (!i1.good() || !i2.good()) {
+                cerr << "Error: `cvrp` and `osm` must be paths to regular files." << endl;
+                exit(1);
+            }
         }
 
         OsmXmlData data = parseOsmXml(osmPath.c_str());
