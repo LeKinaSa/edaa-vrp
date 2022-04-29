@@ -38,6 +38,8 @@ int main(int argc, char** argv) {
     bool logs = result["logs"].as<bool>();
     u32 threads = result["threads"].as<u32>();
 
+    bool mmVis = result["vmm"].as<bool>(), spVis = result["vsp"].as<bool>();
+
     if (result.count("cvrp") && result.count("osm")) {
         string cvrpPath = result["cvrp"].as<string>(),
             osmPath = result["osm"].as<string>();
@@ -51,8 +53,22 @@ int main(int argc, char** argv) {
         ifstream ifs(cvrpPath);
         CvrpInstance instance(ifs);
 
+        GraphVisualizationResult gvr = generateGraphVisualization(data);
+        GraphViewer& gv = gvr.gvRef();
+
         MapMatchingResult mmResult = matchLocations(data, instance, KD_TREE, logs);
+        if (mmVis) {
+            showMapMatchingResults(gv, instance, mmResult);
+            setGraphCenter(gv, instance.getOrigin());
+            gv.createWindow(1280, 720);
+            gv.join();
+            gv.closeWindow();
+        }
+
         calculateShortestPaths(data, instance, mmResult, FIBONACCI_HEAP, logs, threads);
+        if (spVis) {
+            
+        }
     }
     else {
         cerr << "Error: `cvrp` and `osm` options are required." << endl;
