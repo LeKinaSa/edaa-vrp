@@ -187,12 +187,21 @@ for ds, ops in data.items():
 
 #         ax = sb.lineplot(data=df, palette=['crimson', 'tomato', 'orange', 'black', 'gold'],
 #             dashes=False, linewidth=2.0)
-#         plt.fill_between(idx, q25[dsk][opk], med[dsk][opk], color='tomato', alpha=0.25)
-#         plt.fill_between(idx, med[dsk][opk], q75[dsk][opk], color='orange', alpha=0.25)
+#         plt.fill_between(idx, q25[dsk][opk], med[dsk][opk], color='tomato', alpha=0.2)
+#         plt.fill_between(idx, med[dsk][opk], q75[dsk][opk], color='orange', alpha=0.2)
 #         ax.set_title(dsv + ' - ' + opv)
 #         ax.set_xlabel('Nodes')
 #         ax.set_ylabel('Execution Time (nanoseconds)')
 #         plt.show()
+
+# df = pd.DataFrame([kd_tree['NN'][idx[-1]], quadtree['NN'][idx[-1]]]).transpose()
+# df.columns = ['K-d Tree', 'Quadtree']
+# df = pd.melt(df)
+# ax = sb.boxplot(data=df, x='variable', y='value', showfliers=False)
+# ax.set_title('Nearest Neighbor')
+# ax.set_xlabel('Data Structure')
+# ax.set_ylabel('Execution Time (nanoseconds)')
+# plt.show()
 
 # with open('matching_kd.txt', 'r') as f:
 #     kd_data = list(map(int, f.read().split()))
@@ -209,21 +218,21 @@ for ds, ops in data.items():
 # ax.set_title('Nearest Neighbor (Real Data)')
 # plt.show()
 
-with open('shortest_paths_bin.txt', 'r') as f:
-    bin_data = list(map(int, f.read().split()))
-with open('shortest_paths_fib.txt', 'r') as f:
-    fib_data = list(map(int, f.read().split()))
+# with open('shortest_paths_bin.txt', 'r') as f:
+#     bin_data = list(map(int, f.read().split()))
+# with open('shortest_paths_fib.txt', 'r') as f:
+#     fib_data = list(map(int, f.read().split()))
 
-df = pd.DataFrame([bin_data, fib_data]).transpose()
-df.columns = ['Binary Heap', 'Fibonacci Heap']
-df /= 1000
-df = pd.melt(df)
+# df = pd.DataFrame([bin_data, fib_data]).transpose()
+# df.columns = ['Binary Heap', 'Fibonacci Heap']
+# df /= 1000
+# df = pd.melt(df)
 
-ax = sb.boxplot(data=df, x='variable', y='value', showfliers=False)
-ax.set_xlabel('Data Structure')
-ax.set_ylabel('Average Execution Time (milliseconds)')
-ax.set_title('A* Search (Real Data)')
-plt.show()
+# ax = sb.boxplot(data=df, x='variable', y='value', showfliers=False)
+# ax.set_xlabel('Data Structure')
+# ax.set_ylabel('Execution Time (milliseconds)')
+# ax.set_title('Dijkstra\'s Algorithm - Priority Queue Comparison')
+# plt.show()
 
 # --- Memory consumption plots ---
 
@@ -231,21 +240,24 @@ x = np.linspace(0, 1000000, 101)
 
 # Quadtrees vs K-d Trees
 
-# D = 100km, s = 500m
-yq1 = 72 * x * log(200, 4)
-# D = 100km, s = 5m
-yq2 = 72 * x * log(20000, 4)
+# D = 10km, s = 100m
+yq1 = 72 * x * log(100, 4)
+# D = 10km, s = 10m
+yq2 = 72 * x * log(1000, 4)
+# Optimized Quadtree
+yqo = 56 * x
+
 yk = 24 * x
 
-df = pd.DataFrame([yq1, yq2, yk]).transpose()
+df = pd.DataFrame([yq1, yq2, yqo, yk]).transpose()
 df.index = x
 
-ax = sb.lineplot(data=df, palette='husl', dashes=False)
-ax.set_title('Memory Usage Comparison')
-ax.legend(['Quadtree (s = 500m)', 'Quadtree (s = 5m)', 'K-d Tree'])
-ax.set_xlabel('Points')
-ax.set_ylabel('Memory Usage')
-plt.show()
+# ax = sb.lineplot(data=df, palette='husl', dashes=False, linewidth=2.0)
+# ax.set_title('Memory Usage Comparison')
+# ax.legend(['Quadtree (D/s = 100)', 'Quadtree (D/s = 1000)', 'Compressed Quadtree w/ Optimizations', 'K-d Tree'])
+# ax.set_xlabel('Points')
+# ax.set_ylabel('Memory Usage')
+# plt.show()
 
 # Binary vs Fibonacci Heaps
 
@@ -255,9 +267,75 @@ yf = 50 * x
 df = pd.DataFrame([yb, yf]).transpose()
 df.index = x
 
-ax = sb.lineplot(data=df, palette='husl', dashes=False)
-ax.set_title('Memory Usage Comparison')
-ax.legend(['Binary Heap', 'Fibonacci Heap'])
-ax.set_xlabel('Points')
-ax.set_ylabel('Memory Usage')
+# ax = sb.lineplot(data=df, palette='husl', dashes=False, linewidth=2.0)
+# ax.set_title('Memory Usage Comparison')
+# ax.legend(['Binary Heap', 'Fibonacci Heap'])
+# ax.set_xlabel('Points')
+# ax.set_ylabel('Memory Usage')
+# plt.show()
+
+# df = pd.DataFrame({
+#     'test': ['Belém, 357 Locations', 'Brasília, 853 Locations', 'Rio, 1901 Locations'],
+#     'Fibonacci Heap': [5.955, 104.206, 179.589],
+#     'Binary Heap': [6.845, 105.907, 181.507],
+# })
+
+# df = pd.melt(df, id_vars='test', var_name='Data Structure')
+
+# ax = sb.barplot(data=df, palette='husl', x='test', y='value', hue='Data Structure')
+# ax.set_title('Dijkstra Performance using Fibonacci and Binary Heaps')
+# ax.set_xlabel('Instance')
+# ax.set_ylabel('Execution Time (seconds)')
+# for c in ax.containers:
+#     ax.bar_label(c)
+# plt.show()
+
+with open('parallelism/sp_fib_total.txt') as f:
+    fib_total = list(map(int, f.read().strip().split()))
+with open('parallelism/sp_bin_total.txt') as f:
+    bin_total = list(map(int, f.read().strip().split()))
+
+div = lambda x: x / 1000
+fib_total = list(map(div, fib_total))
+bin_total = list(map(div, bin_total))
+
+df = pd.DataFrame([
+    list(range(1, 17)), fib_total, bin_total
+]).transpose()
+df.columns = ['Threads', 'Fibonacci Heap', 'Binary Heap']
+df = pd.melt(df, id_vars='Threads', var_name='Data Structure', value_name='Execution Time')
+
+ax = sb.lineplot(data=df, x='Threads', y='Execution Time',
+    hue='Data Structure', palette='bright', linewidth=2.0)
+ax.set_xticks(list(range(1, 17)))
+ax.set_title('Parallelism Analysis for Dijkstra\'s Algorithm - Total Time')
+ax.set_ylabel('Execution Time (Seconds)')
+plt.show()
+
+data = {
+    'Threads': [],
+    'Data Structure': [],
+    'Execution Time': [],
+}
+
+for i in range(1, 17):
+    with open(f'parallelism/shortest_paths_f{i}.txt') as f:
+        fib_heap = list(map(int, f.read().strip().split()))
+        for t in fib_heap:
+            data['Threads'].append(i)
+            data['Data Structure'].append('Fibonacci Heap')
+            data['Execution Time'].append(t / 1000)
+
+    with open(f'parallelism/shortest_paths_b{i}.txt') as f:
+        bin_heap = list(map(int, f.read().strip().split()))
+        for t in bin_heap:
+            data['Threads'].append(i)
+            data['Data Structure'].append('Binary Heap')
+            data['Execution Time'].append(t / 1000)
+
+df = pd.DataFrame(data)
+
+ax = sb.boxplot(data=df, x='Threads', y='Execution Time', hue='Data Structure', palette='bright', showfliers=False)
+ax.set_title('Parallelism Analysis for Dijkstra\'s Algorithm - Individual Time')
+ax.set_ylabel('Execution Time (Milliseconds)')
 plt.show()
