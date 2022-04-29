@@ -35,4 +35,36 @@ cmake ..
 cmake --build .
 ```
 
-TODO: run instructions
+### Running the Project
+
+The project does not currently rely on user input. All options are passed through command
+line arguments. To obtain a description of the available arguments, run the executable without
+any arguments or with the `-h` or `--help` argument.
+
+```
+> ./cvrp
+
+Solver for large CVRP instances from the LoggiBUD dataset
+Usage:
+  LoggiCVRP [OPTION...]
+
+      --cvrp arg     [REQ] Path to CVRP JSON file
+      --osm arg      [REQ] Path to OSM XML file
+      --vmm          [OPT] Visualize map matching
+      --vsp          [OPT] Visualize shortest paths (for depot point)
+  -t, --threads arg  [OPT] Number of threads to use in shortest path calculation (default: 1)
+  -h, --help         [OPT] Print usage
+  -l, --logs         [OPT] Enable additional execution logs
+      --quadtree     [OPT] Use quadtrees instead of k-d trees for map matching
+      --bin-heap     [OPT] Use binary heaps instead of Fibonacci heaps for Dijkstra's algorithm
+```
+
+Arguments marked `[REQ]` are required, whilst arguments marked `[OPT]` are optional. The following snippet shows an example execution:
+
+```
+./cvrp --osm belem.xml --cvrp cvrp-0-pa-34.json --vmm --vsp -l -t 12
+```
+
+The program will run using the `belem.xml` OSM file, the `cvrp-0-pa-34.json` LoggiBUD
+CVRP file. Visualization for both map matching (`--vmm`) and shortest paths (`--vsp`) is enabled. Shortest path calculation will use twelve threads (`-t 12`) and additional logs
+will be printed to the screen (`-l`).
