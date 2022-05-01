@@ -15,7 +15,7 @@
 using namespace std;
 
 int main(int argc, char** argv) {
-    cxxopts::Options opts("LoggiCVRP", "Solver for large CVRP instances from the LoggiBUD dataset");
+    cxxopts::Options opts("cvrp", "Solver for large CVRP instances from the LoggiBUD dataset");
 
     opts.set_width(100)
         .allow_unrecognised_options()
@@ -59,13 +59,18 @@ int main(int argc, char** argv) {
             }
         }
 
+        cout << "Parsing OSM XML..." << endl;
         OsmXmlData data = parseOsmXml(osmPath.c_str());
+
+        cout << "Parsing CVRP instance..." << endl;
         ifstream ifs(cvrpPath);
         CvrpInstance instance(ifs);
 
+        cout << "Generating graph visualization..." << endl;
         GraphVisualizationResult gvr = generateGraphVisualization(data);
         GraphViewer& gv = gvr.gvRef();
 
+        cout << "Matching coordinates to OSM network nodes..." << endl;
         MapMatchingResult mmResult = matchLocations(data, instance, mmDataStructure, logs);
         showMapMatchingResults(gv, instance, mmResult);
         setGraphCenter(gv, instance.getOrigin());
@@ -78,6 +83,7 @@ int main(int argc, char** argv) {
             gv.closeWindow();
         }
 
+        cout << "Calculating shortest paths between matched nodes..." << endl;
         calculateShortestPaths(data, instance, mmResult, spDataStructure, logs, threads);
         if (spVis) {
             vector<ShortestPathResult> spResult = dijkstra(data.graph,
