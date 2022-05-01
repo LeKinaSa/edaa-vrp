@@ -21,6 +21,14 @@
 - `GraphViewerCpp`: C++ reimplementation of GraphViewer by [@dmfrodrigues](https://github.com/dmfrodrigues/GraphViewerCpp)
 - `cxxopts`: Lightweight command line argument library ([GitHub](https://github.com/jarro2783/cxxopts))
 
+**OSM XML Files**
+
+We provide links to directly download the OSM XML files corresponding to the regions used during the development of the project. These files were obtained through OpenStreetMap's Overpass API.
+
+- [Belém (PA)](https://mega.nz/file/WMBCEY6B#46JHWx_hywfucFZoM2lFKSRRkP7PvAAYoaUNpg2d_sI) (~100 MB)
+- [Brasília (DF)](https://mega.nz/file/PRQGibbT#2hRCvpssBLAp9RTn_3q86SMqPZzgdpRTiv7RMP6XZxo) (~230 MB)
+- [Rio de Janeiro (RJ)](https://mega.nz/file/uUpAgYbC#jiBGd9IWf76QUTGXi-SpG06OEJ8IHUirXnxfOTpe-x8) (~930 MB)
+
 ### Building the Project
 
 Create an empty directory, for example a `build` directory, and `cd` into it.
