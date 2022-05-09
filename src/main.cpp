@@ -22,6 +22,7 @@ int main(int argc, char** argv) {
         .add_options()
         ("cvrp", "[REQ] Path to CVRP JSON file", cxxopts::value<string>())
         ("osm", "[REQ] Path to OSM XML file", cxxopts::value<string>())
+        ("dm", "[OPT] Path to distance matrix", cxxopts::value<string>())
         ("vmm", "[OPT] Visualize map matching")
         ("vsp", "[OPT] Visualize shortest paths (for depot point)")
         ("t,threads", "[OPT] Number of threads to use in shortest path calculation", cxxopts::value<u32>()->default_value("1"))
@@ -83,20 +84,41 @@ int main(int argc, char** argv) {
             gv.closeWindow();
         }
 
-        cout << "Calculating shortest paths between matched nodes..." << endl;
-        calculateShortestPaths(data, instance, mmResult, spDataStructure, logs, threads);
-        if (spVis) {
-            vector<ShortestPathResult> spResult = dijkstra(data.graph,
-                mmResult.originNode, mmResult.deliveryNodes, spDataStructure);
+        string dmPath = "";
+        if (result.count("dm")) {
+            dmPath = result["dm"].as<string>();
+        }
+        bool readFromFile = false;
 
-            for (const auto& [path, _] : spResult) {
-                highlightPath(gvr, path);
+        {
+            ifstream ifsDm(dmPath);
+
+            if (ifsDm.is_open()) {
+                instance.readDistanceMatrixFromFile(dmPath.c_str());
+                readFromFile = true;
             }
-            gv.setZipEdges(true);
+        }
 
-            gv.createWindow(1280, 720);
-            gv.join();
-            gv.closeWindow();
+        if (!readFromFile) {
+            cout << "Calculating shortest paths between matched nodes..." << endl;
+            calculateShortestPaths(data, instance, mmResult, spDataStructure, logs, threads);
+            if (spVis) {
+                vector<ShortestPathResult> spResult = dijkstra(data.graph,
+                    mmResult.originNode, mmResult.deliveryNodes, spDataStructure);
+
+                for (const auto& res : spResult) {
+                    highlightPath(gvr, res.path);
+                }
+                gv.setZipEdges(true);
+
+                gv.createWindow(1280, 720);
+                gv.join();
+                gv.closeWindow();
+            }
+
+            if (!dmPath.empty()) {
+                instance.writeDistanceMatrixToFile(dmPath.c_str());
+            }
         }
     }
     else {
