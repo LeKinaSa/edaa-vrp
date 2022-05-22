@@ -33,7 +33,7 @@ class CvrpInstance {
 };
 
 struct CvrpSolution {
-    std::vector<u64> path;
+    std::vector<std::vector<u64>> routes;
     double length;
 
     bool operator<(const CvrpSolution& other);
