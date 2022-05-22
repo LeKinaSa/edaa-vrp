@@ -81,3 +81,7 @@ void CvrpInstance::setDistance(size_t from, size_t to, double distance) {
         distanceMatrix[from][to] = distance;
     }
 }
+
+bool CvrpSolution::operator<(const CvrpSolution& other) {
+    return length < other.length;
+}

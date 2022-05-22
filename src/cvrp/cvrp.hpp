@@ -32,4 +32,11 @@ class CvrpInstance {
         std::vector<std::vector<double>> distanceMatrix;
 };
 
+struct CvrpSolution {
+    std::vector<u64> path;
+    double length;
+
+    bool operator<(const CvrpSolution& other);
+};
+
 #endif // CVRP_H
