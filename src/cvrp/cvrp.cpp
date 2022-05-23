@@ -2,7 +2,7 @@
 #include <json/json.hpp>
 #include <fstream>
 #include "cvrp.hpp"
-#include "../utils.hpp"
+#include "../data_structures/binary_heap.hpp"
 
 using namespace std;
 using json = nlohmann::json;
@@ -80,6 +80,29 @@ void CvrpInstance::setDistance(size_t from, size_t to, double distance) {
     if (distance > 0) {
         distanceMatrix[from][to] = distance;
     }
+}
+
+vector<vector<u64>> CvrpInstance::distanceOrderedPoints() const {
+    vector<vector<u64>> res;
+    res.reserve(distanceMatrix.size());
+
+    for (u64 i = 0; i < distanceMatrix.size(); ++i) {
+        BinaryHeap<u64> heap(distanceMatrix.size());
+        vector<u64> ordered;
+        ordered.reserve(distanceMatrix.size());
+
+        for (u64 j = 0; j < distanceMatrix.size(); ++j) {
+            if (i != j) {
+                heap.insert(j, distanceMatrix[i][j]);
+            }
+        }
+
+        while (!heap.empty()) {
+            ordered.push_back(heap.extractMin());
+        }
+    }
+
+    return res;
 }
 
 bool CvrpSolution::operator<(const CvrpSolution& other) {

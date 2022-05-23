@@ -3,8 +3,10 @@
 #define CVRP_H
 
 #include "../coordinates.hpp"
+#include "../utils.hpp"
 #include <string>
 #include <vector>
+#include <set>
 
 struct CvrpDelivery {
     std::string id;
@@ -25,6 +27,8 @@ class CvrpInstance {
         void writeDistanceMatrixToFile(const char* path) const;
 
         void setDistance(size_t from, size_t to, double distance);
+
+        std::vector<std::vector<u64>> distanceOrderedPoints() const;
     private:
         double vehicleCapacity;
         Coordinates origin;
