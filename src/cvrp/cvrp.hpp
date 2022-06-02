@@ -21,6 +21,10 @@ class CvrpInstance {
         const std::vector<CvrpDelivery>& getDeliveries() const;
         const std::vector<std::vector<double>> getDistanceMatrix() const;
 
+        const std::vector<int> getInitialSolution() const;
+        const double calculateDistance(std::vector<int> solution) const;
+        const bool isValid(std::vector<int> solution) const;
+
         void readDistanceMatrixFromFile(const char* path);
         void writeDistanceMatrixToFile(const char* path) const;
 

@@ -12,35 +12,6 @@ using namespace std;
 const double INITIAL_TEMPERATURE = 5000;
 const double TEMPERATURE_DECREASE_PER_ITERATION = 0.1;
 
-vector<int> getInitialSolution(int locations) {
-    vector<int> initialSolution = vector<int>();
-
-    for (int i = 1; i <= locations; ++i) {
-        initialSolution.push_back(i);
-        initialSolution.push_back(0);
-    }
-
-    initialSolution.pop_back();
-    return initialSolution;
-}
-
-bool isValid(vector<int> solution, vector<CvrpDelivery> deliveries, int vehicleCapacity) {
-    int capacity = 0;
-
-    for (int location : solution) {
-        if (location == 0) {
-            capacity = 0;
-            continue;
-        }
-        capacity += deliveries[location-1].size;
-        if (capacity > vehicleCapacity) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 vector<int> randomNeighbor(vector<int> oldSolution) {
     vector<int> newSolution = vector<int>(oldSolution);
     int randomValue = rand() % 4;
@@ -79,39 +50,28 @@ vector<int> randomNeighbor(vector<int> oldSolution) {
     return newSolution;
 }
 
-vector<int> randomValidNeighbor(vector<int> oldSolution, vector<CvrpDelivery> deliveries, int vehicleCapacity) {
+vector<int> randomValidNeighbor(vector<int> oldSolution, CvrpInstance instance) {
     vector<int> newSolution;
     bool newSolutionIsValid = false;
     while (!newSolutionIsValid) {
         newSolution = randomNeighbor(oldSolution);
-        newSolutionIsValid = isValid(newSolution, deliveries, vehicleCapacity);
+        newSolutionIsValid = instance.isValid(newSolution);
     }
     return newSolution;
-}
-
-double calculateDistance(vector<int> solution, vector<vector<double>> distanceMatrix) {
-    int distance = distanceMatrix[0][solution[0]];
-
-    for (int i = 0, j = 1; j < solution.size(); ++i, ++j) {
-        distance += distanceMatrix[solution[i]][solution[j]];
-    }
-
-    distance += distanceMatrix[solution[solution.size()-1]][0];
-    return distance;
 }
 
 vector<int> simulatedAnnealingAlgorithm(CvrpInstance instance) {
     srand(time(NULL));
 
-    vector<int> oldSolution = getInitialSolution(instance.getDeliveries().size());
-    double oldDistance = calculateDistance(oldSolution, instance.getDistanceMatrix());
+    vector<int> oldSolution = instance.getInitialSolution();
+    double oldDistance = instance.calculateDistance(oldSolution);
     
     vector<int> bestSolution = oldSolution;
     double bestDistance = oldDistance;
 
     for(double temperature = INITIAL_TEMPERATURE; temperature > 0; temperature -= TEMPERATURE_DECREASE_PER_ITERATION) {
-        vector<int> newSolution = randomValidNeighbor(oldSolution, instance.getDeliveries(), instance.getVehicleCapacity());
-        double newDistance = calculateDistance(newSolution, instance.getDistanceMatrix());
+        vector<int> newSolution = randomValidNeighbor(oldSolution, instance);
+        double newDistance = instance.calculateDistance(newSolution);
         
         if (newDistance < bestDistance) {
             bestSolution = newSolution;
