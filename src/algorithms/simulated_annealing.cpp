@@ -9,10 +9,8 @@
 
 using namespace std;
 
-const int NUMBER_OF_ITERATIONS = 10000;
-const double INITIAL_TEMPERATURE = 1000;
+const double INITIAL_TEMPERATURE = 5000;
 const double TEMPERATURE_DECREASE_PER_ITERATION = 0.1;
-const double PROBABILITY_TO_CHANGE_SOLUTIONS = 0.5;
 
 vector<int> getInitialSolution(int locations) {
     vector<int> initialSolution = vector<int>();
@@ -121,7 +119,7 @@ vector<int> simulatedAnnealingAlgorithm(CvrpInstance instance) {
         }
 
         double deltaDistance = newDistance - oldDistance;
-        double randomProbability = 0;
+        double randomProbability = (float) rand() / RAND_MAX;
         if (deltaDistance <= 0 || exp(-deltaDistance / temperature) > randomProbability) {
             oldSolution = move(newSolution);
             oldDistance = newDistance;
