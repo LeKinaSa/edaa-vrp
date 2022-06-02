@@ -3,9 +3,8 @@
 #define SIMULATED_ANNEALING_H
 
 #include <vector>
+#include "../cvrp/cvrp.hpp"
 
-std::vector<int> simulatedAnnealing(std::vector<std::vector<double>> distanceMatrix, std::vector<int> demands, int vehicleCapacity);
+std::vector<int> simulatedAnnealing(CvrpInstance instance);
 
 #endif // SIMULATED_ANNEALING_H
-
-

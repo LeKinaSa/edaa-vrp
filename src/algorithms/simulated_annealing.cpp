@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <stdlib.h>
 #include <time.h>
+#include "simulated_annealing.hpp"
+#include "../cvrp/cvrp.hpp"
 
 using namespace std;
 
@@ -24,7 +26,7 @@ vector<int> getInitialSolution(int locations) {
     return initialSolution;
 }
 
-bool isValid(vector<int> solution, vector<int> demands, int vehicleCapacity) {
+bool isValid(vector<int> solution, vector<CvrpDelivery> deliveries, int vehicleCapacity) {
     int capacity = 0;
 
     for (int location : solution) {
@@ -32,7 +34,7 @@ bool isValid(vector<int> solution, vector<int> demands, int vehicleCapacity) {
             capacity = 0;
             continue;
         }
-        capacity += demands[location];
+        capacity += deliveries[location-1].size;
         if (capacity > vehicleCapacity) {
             return false;
         }
@@ -79,12 +81,12 @@ vector<int> randomNeighbor(vector<int> oldSolution) {
     return newSolution;
 }
 
-vector<int> randomValidNeighbor(vector<int> oldSolution, vector<int> demands, int vehicleCapacity) {
+vector<int> randomValidNeighbor(vector<int> oldSolution, vector<CvrpDelivery> deliveries, int vehicleCapacity) {
     vector<int> newSolution;
     bool newSolutionIsValid = false;
     while (!newSolutionIsValid) {
         newSolution = randomNeighbor(oldSolution);
-        newSolutionIsValid = isValid(newSolution, demands, vehicleCapacity);
+        newSolutionIsValid = isValid(newSolution, deliveries, vehicleCapacity);
     }
     return newSolution;
 }
@@ -100,18 +102,18 @@ double calculateDistance(vector<int> solution, vector<vector<double>> distanceMa
     return distance;
 }
 
-vector<int> simulatedAnnealing(vector<vector<double>> distanceMatrix, vector<int> demands, int vehicleCapacity) {
+vector<int> simulatedAnnealing(CvrpInstance instance) {
     srand(time(NULL));
 
-    vector<int> oldSolution = getInitialSolution(distanceMatrix.size() - 1);
-    double oldDistance = calculateDistance(oldSolution, distanceMatrix);
+    vector<int> oldSolution = getInitialSolution(instance.getDeliveries().size());
+    double oldDistance = calculateDistance(oldSolution, instance.getDistanceMatrix());
     
     vector<int> bestSolution = oldSolution;
     double bestDistance = oldDistance;
 
     for(double temperature = INITIAL_TEMPERATURE; temperature > 0; temperature -= TEMPERATURE_DECREASE_PER_ITERATION) {
-        vector<int> newSolution = randomValidNeighbor(oldSolution, demands, vehicleCapacity);
-        double newDistance = calculateDistance(newSolution, distanceMatrix);
+        vector<int> newSolution = randomValidNeighbor(oldSolution, instance.getDeliveries(), instance.getVehicleCapacity());
+        double newDistance = calculateDistance(newSolution, instance.getDistanceMatrix());
         
         if (newDistance < bestDistance) {
             bestSolution = newSolution;
@@ -121,10 +123,10 @@ vector<int> simulatedAnnealing(vector<vector<double>> distanceMatrix, vector<int
         double deltaDistance = newDistance - oldDistance;
         double randomProbability = 0;
         if (deltaDistance <= 0 || exp(-deltaDistance / temperature) > randomProbability) {
-            oldSolution = newSolution; // move
+            oldSolution = move(newSolution);
             oldDistance = newDistance;
         }
-
-        return bestSolution;
     }
+
+    return bestSolution;
 }
