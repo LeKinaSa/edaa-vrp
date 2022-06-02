@@ -102,7 +102,7 @@ double calculateDistance(vector<int> solution, vector<vector<double>> distanceMa
     return distance;
 }
 
-vector<int> simulatedAnnealing(CvrpInstance instance) {
+vector<int> simulatedAnnealingAlgorithm(CvrpInstance instance) {
     srand(time(NULL));
 
     vector<int> oldSolution = getInitialSolution(instance.getDeliveries().size());
@@ -129,4 +129,20 @@ vector<int> simulatedAnnealing(CvrpInstance instance) {
     }
 
     return bestSolution;
+}
+
+vector<int> simulatedAnnealing(CvrpInstance instance) {
+    vector<int> solution = simulatedAnnealingAlgorithm(instance);
+    vector<int> cleanSolution = vector<int>();
+    for (int i = -1, j = 0; j < solution.size(); ++i, ++j) {
+        int valueI = i >= 0 ? solution[i] : 0;
+        int valueJ = solution[j];
+        if (valueI + valueJ > 0) {
+            cleanSolution.push_back(solution[j]);
+        }
+    }
+    if (cleanSolution.back() == 0) {
+        cleanSolution.pop_back();
+    }
+    return cleanSolution;
 }
