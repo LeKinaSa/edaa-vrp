@@ -31,5 +31,6 @@ void setGraphCenter(GraphViewer& gv, const Coordinates& coords, float scale = 20
 void showMapMatchingResults(GraphViewer& gv, const CvrpInstance& instance,
     const MapMatchingResult& result, float scale = 200000.0);
 void highlightPath(GraphVisualizationResult& result, const std::list<u64>& path, const sf::Color& color = sf::Color::Red);
+void showSolution(GraphVisualizationResult& result, const MapMatchingResult& mmResult, const Graph<OsmNode>& graph, const CvrpSolution& solution);
 
 #endif // VISUALIZATION_H
