@@ -47,7 +47,7 @@ const vector<CvrpDelivery>& CvrpInstance::getDeliveries() const {
     return deliveries;
 }
 
-const vector<vector<double>> CvrpInstance::getDistanceMatrix() const {
+const vector<vector<double>>& CvrpInstance::getDistanceMatrix() const {
     return distanceMatrix;
 }
 

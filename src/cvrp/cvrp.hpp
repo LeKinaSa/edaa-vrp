@@ -21,7 +21,7 @@ class CvrpInstance {
         double getVehicleCapacity() const;
         const Coordinates& getOrigin() const;
         const std::vector<CvrpDelivery>& getDeliveries() const;
-        const std::vector<std::vector<double>> getDistanceMatrix() const;
+        const std::vector<std::vector<double>>& getDistanceMatrix() const;
 
         void readDistanceMatrixFromFile(const char* path);
         void writeDistanceMatrixToFile(const char* path) const;
