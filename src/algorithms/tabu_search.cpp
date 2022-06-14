@@ -236,6 +236,10 @@ struct TabuSearchRoute {
         removedEdges.insert({before, element});
     }
 
+    double excessLoad(const CvrpInstance& instance) {
+        return max(0.0, weight - instance.getVehicleCapacity());
+    }
+
     void clearEdgeSets() {
         addedEdges.clear();
         removedEdges.clear();
@@ -294,7 +298,7 @@ void customerSwap(const CvrpInstance& instance, TabuSearchSolution& solution, Ta
 static random_device rd;
 static mt19937 rng(rd());
 
-CvrpSolution granularTabuSearch(const CvrpInstance& instance) {
+CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIterations) {
     typedef function<void(const CvrpInstance&, TabuSearchSolution&, TabuSearchEdge&)> TabuSearchHeuristic;
 
     CvrpSolution initialSolution = clarkeWrightSavings(instance);
@@ -307,78 +311,104 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance) {
         return edgeLength <= maxLength;
     };
 
-    TabuSearchSolution bestSolution;
+    TabuSearchSolution bestSolution, currentSolution;
     for (const auto& route : initialSolution.routes) {
         double routeLength = instance.routeLength(route);
         bestSolution.routes.push_back({route, routeLength, instance.routeWeight(route)});
         bestSolution.length += routeLength;
     }
+    currentSolution = bestSolution;
 
     cout << "Clarke-Wright initial solution has length " << bestSolution.length / 1000 << "km" << endl;
 
     uniform_int_distribution<int> tenureDistribution(5, 10);
     unordered_map<Edge, u8, PairHash> tabuList;
-    optional<TabuSearchSolution> iterationBest;
-    unordered_set<Edge, PairHash> removedEdges;
-    u32 movesEvaluated = 0;
 
-    for (size_t ra = 0; ra < bestSolution.routes.size(); ++ra) {
-        for (size_t rb = 0; rb < bestSolution.routes.size(); ++rb) {
-            if (ra != rb) {
-                TabuSearchRoute& tsrA = bestSolution.routes[ra];
-                TabuSearchRoute& tsrB = bestSolution.routes[rb];
+    for (size_t iter = 1; iter <= maxIterations; ++iter) {
+        optional<TabuSearchSolution> iterationBest;
+        unordered_set<Edge, PairHash> removedEdges;
+        u32 movesEvaluated = 0;
 
-                for (size_t idxA = 1; idxA < tsrA.route.size() - 1; ++idxA) {
-                    for (size_t idxB = 1; idxB < tsrB.route.size() - 1; ++idxB) {
-                        if (isShort({tsrA.route[idxA], tsrB.route[idxB]})) {
-                            auto applyHeuristic = [&instance, &tabuList, &iterationBest, &removedEdges,
-                                    &bestSolution, &movesEvaluated, ra, rb, idxA, idxB]
-                                    (const TabuSearchHeuristic& heuristic) {
-                                TabuSearchSolution newSolution = bestSolution;
-                                TabuSearchEdge edge = {idxA, idxB, newSolution.routes[ra], newSolution.routes[rb]};
-                                heuristic(instance, newSolution, edge);
+        for (size_t ra = 0; ra < currentSolution.routes.size(); ++ra) {
+            for (size_t rb = 0; rb < currentSolution.routes.size(); ++rb) {
+                if (ra != rb) {
+                    TabuSearchRoute& tsrA = currentSolution.routes[ra];
+                    TabuSearchRoute& tsrB = currentSolution.routes[rb];
 
-                                bool tabu = false;
-                                unordered_set<Edge, PairHash> addedEdges = edge.tsrA.addedEdges;
-                                addedEdges.merge(edge.tsrB.addedEdges);
-                                for (const Edge& added : addedEdges) {
-                                    if (tabuList.count(added)) {
-                                        tabu = true;
-                                        break;
+                    for (size_t idxA = 1; idxA < tsrA.route.size() - 1; ++idxA) {
+                        for (size_t idxB = 1; idxB < tsrB.route.size() - 1; ++idxB) {
+                            if (isShort({tsrA.route[idxA], tsrB.route[idxB]})) {
+                                auto applyHeuristic = [&instance, &tabuList, &iterationBest, &removedEdges,
+                                        &bestSolution, &currentSolution, &movesEvaluated, ra, rb, idxA, idxB]
+                                        (const TabuSearchHeuristic& heuristic) {
+                                    TabuSearchSolution newSolution = currentSolution;
+                                    TabuSearchEdge edge = {idxA, idxB, newSolution.routes[ra], newSolution.routes[rb]};
+                                    edge.tsrA.clearEdgeSets();
+                                    edge.tsrB.clearEdgeSets();
+                                    heuristic(instance, newSolution, edge);
+
+                                    bool tabu = false;
+                                    unordered_set<Edge, PairHash> addedEdges = edge.tsrA.addedEdges;
+                                    addedEdges.merge(edge.tsrB.addedEdges);
+                                    for (const Edge& added : addedEdges) {
+                                        if (tabuList.count(added)) {
+                                            tabu = true;
+                                            break;
+                                        }
                                     }
-                                }
 
-                                if (!tabu) {
-                                    if (!iterationBest.has_value() || newSolution.length < iterationBest->length) {
-                                        iterationBest = newSolution;
-                                        removedEdges.clear();
-                                        removedEdges.merge(edge.tsrA.removedEdges);
-                                        removedEdges.merge(edge.tsrB.removedEdges);
+                                    if (newSolution.length < bestSolution.length) {
+                                        bestSolution = newSolution;
                                     }
-                                    ++movesEvaluated;
-                                }
-                            };
 
-                            applyHeuristic(customerInsertion);
-                            if (idxB < tsrB.route.size() - 2) {
-                                applyHeuristic(twoCustomer);
-                            }
-                            if (idxA < tsrA.route.size() - 2) {
-                                applyHeuristic(customerSwap);
+                                    if (!tabu) {
+                                        if (!iterationBest.has_value() || newSolution.length < iterationBest->length) {
+                                            iterationBest = newSolution;
+                                            removedEdges.clear();
+                                            removedEdges.merge(edge.tsrA.removedEdges);
+                                            removedEdges.merge(edge.tsrB.removedEdges);
+                                        }
+                                        ++movesEvaluated;
+                                    }
+                                };
+
+                                applyHeuristic(customerInsertion);
+                                if (idxB < tsrB.route.size() - 2) {
+                                    applyHeuristic(twoCustomer);
+                                }
+                                if (idxA < tsrA.route.size() - 2) {
+                                    applyHeuristic(customerSwap);
+                                }
                             }
                         }
                     }
                 }
             }
         }
+
+        for (auto it = tabuList.cbegin(); it != tabuList.cend();) {
+            tabuList[it->first] -= 1;
+            if (tabuList[it->first] == 0) {
+                it = tabuList.erase(it);
+            }
+            else {
+                ++it;
+            }
+        }
+
+        for (const Edge& edge : removedEdges) {
+            tabuList[edge] = tenureDistribution(rng);
+        }
+
+        cout << "[ITER. " << iter << "] Evaluated " << movesEvaluated
+            << " moves, best non-tabu route has length " << iterationBest->length / 1000
+            << "km" << endl;
+
+        currentSolution = *iterationBest;
     }
 
-    for (const Edge& edge : removedEdges) {
-        tabuList[edge] = tenureDistribution(rng);
-    }
-
-    cout << "Evaluated " << movesEvaluated << " moves, best non-tabu route has length "
-        << iterationBest->length / 1000 << "km" << endl;
+    cout << "Best solution found by algorithm has length " << bestSolution.length / 1000
+        << "km" << endl;
 
     return initialSolution;
 }
