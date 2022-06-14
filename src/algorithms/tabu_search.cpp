@@ -114,7 +114,7 @@ class ClarkeWrightRoute {
         double length, weight;
 };
 
-u32 ClarkeWrightRoute::nextId = 1;
+u32 ClarkeWrightRoute::nextId = 0;
 
 CvrpSolution clarkeWrightSavings(const CvrpInstance& instance) {
     const vector<vector<double>>& distanceMatrix = instance.getDistanceMatrix();
@@ -201,52 +201,135 @@ CvrpSolution clarkeWrightSavings(const CvrpInstance& instance) {
     return { convertedRoutes, length };
 }
 
+
 struct TabuSearchRoute {
-    list<u64> route;
-    double length, weight;
+    vector<u64> route;
+    double length = 0, weight = 0;
+
+    void removeDelivery(const CvrpInstance& instance, size_t idx) {
+        const auto& dm = instance.getDistanceMatrix();
+        u64 element = route[idx], before = route[idx - 1], after = route[idx + 1];
+
+        weight -= instance.getDeliveries().at(element - 1).size;
+        length += dm[before][after] - (dm[before][element] + dm[element][after]);
+        route.erase(route.begin() + idx);
+    }
+
+    void addDelivery(const CvrpInstance& instance, size_t idx, u64 delivery) {
+        const auto& dm = instance.getDistanceMatrix();
+        u64 element = route[idx], before = route[idx - 1];
+
+        weight += instance.getDeliveries().at(delivery - 1).size;
+        length += dm[before][delivery] + dm[delivery][element] - dm[before][element];
+        route.insert(route.begin() + idx, delivery);
+    }
 };
 
+struct TabuSearchEdge {
+    u64 idxA, idxB;
+    TabuSearchRoute& tsrA;
+    TabuSearchRoute& tsrB;
+};
+
+struct TabuSearchSolution {
+    vector<TabuSearchRoute> routes;
+    double length = 0;
+};
+
+void customerInsertion(const CvrpInstance& instance, TabuSearchSolution& solution, TabuSearchEdge& edge) {
+    u64 a = edge.tsrA.route[edge.idxA];
+    double lengthDelta = -(edge.tsrA.length + edge.tsrB.length);
+
+    edge.tsrA.removeDelivery(instance, edge.idxA);
+    edge.tsrB.addDelivery(instance, edge.idxB, a);
+
+    lengthDelta += edge.tsrA.length + edge.tsrB.length;
+    solution.length += lengthDelta;
+}
+
+void twoCustomer(const CvrpInstance& instance, TabuSearchSolution& solution, TabuSearchEdge& edge) {
+    u64 b = edge.tsrB.route[edge.idxB], afterB = edge.tsrB.route[edge.idxB + 1];
+    double lengthDelta = -(edge.tsrA.length + edge.tsrB.length);
+
+    edge.tsrB.removeDelivery(instance, edge.idxB + 1);
+    edge.tsrB.removeDelivery(instance, edge.idxB);
+    edge.tsrA.addDelivery(instance, edge.idxA + 1, afterB);
+    edge.tsrA.addDelivery(instance, edge.idxA + 1, b);
+
+    lengthDelta += edge.tsrA.length + edge.tsrB.length;
+    solution.length += lengthDelta;
+}
+
+void customerSwap(const CvrpInstance& instance, TabuSearchSolution& solution, TabuSearchEdge& edge) {
+    u64 b = edge.tsrB.route[edge.idxB], afterA = edge.tsrA.route[edge.idxA + 1];
+    double lengthDelta = -(edge.tsrA.length + edge.tsrB.length);
+
+    edge.tsrA.removeDelivery(instance, edge.idxA + 1);
+    edge.tsrB.removeDelivery(instance, edge.idxB);
+    edge.tsrA.addDelivery(instance, edge.idxA + 1, b);
+    edge.tsrB.addDelivery(instance, edge.idxB, afterA);
+
+    lengthDelta += edge.tsrA.length + edge.tsrB.length;
+    solution.length += lengthDelta;
+}
+
 CvrpSolution granularTabuSearch(const CvrpInstance& instance) {
+    typedef function<void(const CvrpInstance&, TabuSearchSolution&, TabuSearchEdge&)> TabuSearchHeuristic;
+
     CvrpSolution initialSolution = clarkeWrightSavings(instance);
     const vector<vector<double>>& distanceMatrix = instance.getDistanceMatrix();
 
     double beta = 1.5;
     auto isShort = [&beta, &instance, &initialSolution](const Edge& edge) {
-        return beta * initialSolution.length / (instance.getDeliveries().size() + initialSolution.routes.size());
+        double maxLength = beta * initialSolution.length / (instance.getDeliveries().size() + initialSolution.routes.size());
+        double edgeLength = instance.getDistanceMatrix()[edge.first][edge.second];
+        return edgeLength <= maxLength;
     };
 
-    vector<TabuSearchRoute> routes;
+    TabuSearchSolution bestSolution;
     for (const auto& route : initialSolution.routes) {
-        list<u64> l;
-        l.insert(l.end(), route.begin(), route.end());
-        routes.push_back({l, instance.routeLength(route), instance.routeWeight(route)});
+        double routeLength = instance.routeLength(route);
+        bestSolution.routes.push_back({route, routeLength, instance.routeWeight(route)});
+        bestSolution.length += routeLength;
     }
 
-    vector<Edge> validEdges;
-    for (size_t ra = 0; ra < routes.size(); ++ra) {
-        for (size_t rb = 0; rb < routes.size(); ++rb) {
+    cout << bestSolution.length << endl;
+
+    TabuSearchSolution iterationBest = bestSolution;
+    u32 movesEvaluated = 0;
+    for (size_t ra = 0; ra < bestSolution.routes.size(); ++ra) {
+        for (size_t rb = 0; rb < bestSolution.routes.size(); ++rb) {
             if (ra != rb) {
-                TabuSearchRoute& tsrA = routes[ra];
-                TabuSearchRoute& tsrB = routes[rb];
+                TabuSearchRoute& tsrA = bestSolution.routes[ra];
+                TabuSearchRoute& tsrB = bestSolution.routes[rb];
 
-                auto itA = ++tsrA.route.begin();
-                auto itB = ++tsrB.route.begin();
-                auto stopA = --tsrA.route.end();
-                auto stopB = --tsrB.route.end();
+                for (size_t idxA = 1; idxA < tsrA.route.size() - 1; ++idxA) {
+                    for (size_t idxB = 1; idxB < tsrB.route.size() - 1; ++idxB) {
+                        if (isShort({tsrA.route[idxA], tsrB.route[idxB]})) {
+                            auto applyHeuristic = [&instance, &iterationBest, &bestSolution, &movesEvaluated, ra, rb, idxA, idxB](const TabuSearchHeuristic& heuristic) {
+                                TabuSearchSolution newSolution = bestSolution;
+                                TabuSearchEdge edge = {idxA, idxB, newSolution.routes[ra], newSolution.routes[rb]};
+                                heuristic(instance, newSolution, edge);
+                                if (newSolution.length < iterationBest.length) {
+                                    iterationBest = newSolution;
+                                }
+                                ++movesEvaluated;
+                            };
 
-                for (; itA != stopA; ++itA) {
-                    for (; itB != stopB; ++itB) {
-                        Edge e = {*itA, *itB};
-                        if (isShort(e)) {
-                            validEdges.push_back(e);
+                            applyHeuristic(customerInsertion);
+                            if (idxB < tsrB.route.size() - 2) {
+                                applyHeuristic(twoCustomer);
+                            }
+                            if (idxA < tsrA.route.size() - 2) {
+                                applyHeuristic(customerSwap);
+                            }
                         }
                     }
                 }
             }
         }
     }
-
-    cout << validEdges.size() << endl;
+    cout << "Evaluated " << movesEvaluated << " moves, best route has length " << iterationBest.length << endl;
 
     return initialSolution;
 }
