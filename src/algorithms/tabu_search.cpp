@@ -377,7 +377,7 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
 
                                     bool tabu = false;
                                     unordered_set<Edge, PairHash> addedEdges = edge.tsrA.addedEdges;
-                                    addedEdges.merge(edge.tsrB.addedEdges);
+                                    addedEdges.insert(edge.tsrB.addedEdges.begin(), edge.tsrB.addedEdges.end());
                                     for (const Edge& added : addedEdges) {
                                         if (tabuList.count(added)) {
                                             tabu = true;
@@ -391,10 +391,7 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
 
                                     if (!tabu) {
                                         if (!iterationBest.has_value() || newSolution.lengthWithPenalty(instance, penalty) < iterationBest->lengthWithPenalty(instance, penalty)) {
-                                            iterationBest = newSolution;
-                                            removedEdges.clear();
-                                            removedEdges.merge(edge.tsrA.removedEdges);
-                                            removedEdges.merge(edge.tsrB.removedEdges);
+                                            iterationBest = move(newSolution);
                                         }
                                         ++movesEvaluated;
                                     }
@@ -416,6 +413,11 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
 
         if (iterationBest->isValid(instance)) ++valid;
 
+        for (auto& route : iterationBest->routes) {
+            removedEdges.insert(route.removedEdges.begin(), route.removedEdges.end());
+            route.clearEdgeSets();
+        }
+
         for (auto it = tabuList.cbegin(); it != tabuList.cend();) {
             tabuList[it->first] -= 1;
             if (tabuList[it->first] == 0) {
@@ -434,7 +436,7 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
             << " moves, best non-tabu route has length " << iterationBest->length / 1000
             << "km" << endl;
 
-        currentSolution = *iterationBest;
+        currentSolution = move(*iterationBest);
 
         if (iter % PENALTY_UPDATE_ITERS == 0) {
             if (valid == PENALTY_UPDATE_ITERS) {
@@ -445,6 +447,7 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
                 // All invalid
                 penalty = min(MAX_PENALTY, penalty * 2);
             }
+            valid = 0;
         }
     }
 
