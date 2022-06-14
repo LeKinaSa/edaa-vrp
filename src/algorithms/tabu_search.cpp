@@ -236,7 +236,7 @@ struct TabuSearchRoute {
         removedEdges.insert({before, element});
     }
 
-    double excessLoad(const CvrpInstance& instance) {
+    double excessLoad(const CvrpInstance& instance) const {
         return max(0.0, weight - instance.getVehicleCapacity());
     }
 
@@ -255,6 +255,14 @@ struct TabuSearchEdge {
 struct TabuSearchSolution {
     vector<TabuSearchRoute> routes;
     double length = 0;
+
+    double excessLoad(const CvrpInstance& instance) const {
+        double sum = 0;
+        for (const auto& route : routes) {
+            sum += route.excessLoad(instance);
+        }
+        return sum;
+    }
 };
 
 void customerInsertion(const CvrpInstance& instance, TabuSearchSolution& solution, TabuSearchEdge& edge) {
