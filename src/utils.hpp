@@ -2,8 +2,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <cmath>
 #include "types.hpp"
+#include <cmath>
 #include <chrono>
 #include <mutex>
 
@@ -35,6 +35,25 @@ class AtomicOStream {
     private:
         std::ostream& os;
         std::mutex mut;
+};
+
+// Adapted from https://stackoverflow.com/questions/2590677/how-do-i-combine-hash-values-in-c0x
+inline void hashCombine(std::size_t& seed) {}
+
+template<typename T, typename... Rest>
+void hashCombine(size_t& seed, const T& v, Rest... rest) {
+    std::hash<T> hasher;
+    seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    hashCombine(seed, rest...);
+}
+
+struct PairHash {
+    template <typename T1, typename T2>
+    std::size_t operator()(const std::pair<T1, T2>& p) const {
+        size_t seed = 0;
+        hashCombine(seed, p.first, p.second);
+        return seed;
+    }
 };
 
 #endif // UTILS_H
