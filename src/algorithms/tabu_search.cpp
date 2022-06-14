@@ -4,7 +4,11 @@
 #include <algorithm>
 #include <queue>
 #include <unordered_map>
+#include <unordered_set>
+#include <optional>
 #include <functional>
+#include <random>
+
 #include "tabu_search.hpp"
 #include "../utils.hpp"
 
@@ -166,8 +170,6 @@ CvrpSolution clarkeWrightSavings(const CvrpInstance& instance) {
 
         if (start == startRoute.lastDelivery() && end == endRoute.firstDelivery()) {
             if ((startRoute.getWeight() + endRoute.getWeight()) <= instance.getVehicleCapacity()) {
-                cout << "Found new saving: (" << start << ", " << end << ")" << endl;
-
                 startRoute.popBack();
                 endRoute.popFront();
 
@@ -206,6 +208,8 @@ struct TabuSearchRoute {
     vector<u64> route;
     double length = 0, weight = 0;
 
+    unordered_set<Edge, PairHash> addedEdges = {}, removedEdges = {};
+
     void removeDelivery(const CvrpInstance& instance, size_t idx) {
         const auto& dm = instance.getDistanceMatrix();
         u64 element = route[idx], before = route[idx - 1], after = route[idx + 1];
@@ -213,6 +217,10 @@ struct TabuSearchRoute {
         weight -= instance.getDeliveries().at(element - 1).size;
         length += dm[before][after] - (dm[before][element] + dm[element][after]);
         route.erase(route.begin() + idx);
+
+        addedEdges.insert({before, after});
+        removedEdges.insert({before, element});
+        removedEdges.insert({element, after});
     }
 
     void addDelivery(const CvrpInstance& instance, size_t idx, u64 delivery) {
@@ -222,6 +230,15 @@ struct TabuSearchRoute {
         weight += instance.getDeliveries().at(delivery - 1).size;
         length += dm[before][delivery] + dm[delivery][element] - dm[before][element];
         route.insert(route.begin() + idx, delivery);
+
+        addedEdges.insert({before, delivery});
+        addedEdges.insert({delivery, element});
+        removedEdges.insert({before, element});
+    }
+
+    void clearEdgeSets() {
+        addedEdges.clear();
+        removedEdges.clear();
     }
 };
 
@@ -273,6 +290,10 @@ void customerSwap(const CvrpInstance& instance, TabuSearchSolution& solution, Ta
     solution.length += lengthDelta;
 }
 
+// Initialize random number generator
+static random_device rd;
+static mt19937 rng(rd());
+
 CvrpSolution granularTabuSearch(const CvrpInstance& instance) {
     typedef function<void(const CvrpInstance&, TabuSearchSolution&, TabuSearchEdge&)> TabuSearchHeuristic;
 
@@ -293,10 +314,14 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance) {
         bestSolution.length += routeLength;
     }
 
-    cout << bestSolution.length << endl;
+    cout << "Clarke-Wright initial solution has length " << bestSolution.length / 1000 << "km" << endl;
 
-    TabuSearchSolution iterationBest = bestSolution;
+    uniform_int_distribution<int> tenureDistribution(5, 10);
+    unordered_map<Edge, u8, PairHash> tabuList;
+    optional<TabuSearchSolution> iterationBest;
+    unordered_set<Edge, PairHash> removedEdges;
     u32 movesEvaluated = 0;
+
     for (size_t ra = 0; ra < bestSolution.routes.size(); ++ra) {
         for (size_t rb = 0; rb < bestSolution.routes.size(); ++rb) {
             if (ra != rb) {
@@ -306,14 +331,32 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance) {
                 for (size_t idxA = 1; idxA < tsrA.route.size() - 1; ++idxA) {
                     for (size_t idxB = 1; idxB < tsrB.route.size() - 1; ++idxB) {
                         if (isShort({tsrA.route[idxA], tsrB.route[idxB]})) {
-                            auto applyHeuristic = [&instance, &iterationBest, &bestSolution, &movesEvaluated, ra, rb, idxA, idxB](const TabuSearchHeuristic& heuristic) {
+                            auto applyHeuristic = [&instance, &tabuList, &iterationBest, &removedEdges,
+                                    &bestSolution, &movesEvaluated, ra, rb, idxA, idxB]
+                                    (const TabuSearchHeuristic& heuristic) {
                                 TabuSearchSolution newSolution = bestSolution;
                                 TabuSearchEdge edge = {idxA, idxB, newSolution.routes[ra], newSolution.routes[rb]};
                                 heuristic(instance, newSolution, edge);
-                                if (newSolution.length < iterationBest.length) {
-                                    iterationBest = newSolution;
+
+                                bool tabu = false;
+                                unordered_set<Edge, PairHash> addedEdges = edge.tsrA.addedEdges;
+                                addedEdges.merge(edge.tsrB.addedEdges);
+                                for (const Edge& added : addedEdges) {
+                                    if (tabuList.count(added)) {
+                                        tabu = true;
+                                        break;
+                                    }
                                 }
-                                ++movesEvaluated;
+
+                                if (!tabu) {
+                                    if (!iterationBest.has_value() || newSolution.length < iterationBest->length) {
+                                        iterationBest = newSolution;
+                                        removedEdges.clear();
+                                        removedEdges.merge(edge.tsrA.removedEdges);
+                                        removedEdges.merge(edge.tsrB.removedEdges);
+                                    }
+                                    ++movesEvaluated;
+                                }
                             };
 
                             applyHeuristic(customerInsertion);
@@ -329,7 +372,13 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance) {
             }
         }
     }
-    cout << "Evaluated " << movesEvaluated << " moves, best route has length " << iterationBest.length << endl;
+
+    for (const Edge& edge : removedEdges) {
+        tabuList[edge] = tenureDistribution(rng);
+    }
+
+    cout << "Evaluated " << movesEvaluated << " moves, best non-tabu route has length "
+        << iterationBest->length / 1000 << "km" << endl;
 
     return initialSolution;
 }
