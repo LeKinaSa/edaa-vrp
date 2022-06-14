@@ -263,6 +263,22 @@ struct TabuSearchSolution {
         }
         return sum;
     }
+
+    bool isValid(const CvrpInstance& instance) const {
+        return excessLoad(instance) == 0;
+    }
+
+    double lengthWithPenalty(const CvrpInstance& instance, double penalty) const {
+        return length + excessLoad(instance) * penalty;
+    }
+
+    CvrpSolution toStandardForm() const {
+        vector<vector<u64>> standardRoutes;
+        for (const auto& tsr : routes) {
+            standardRoutes.push_back(tsr.route);
+        }
+        return { standardRoutes, length };
+    }
 };
 
 void customerInsertion(const CvrpInstance& instance, TabuSearchSolution& solution, TabuSearchEdge& edge) {
@@ -306,6 +322,9 @@ void customerSwap(const CvrpInstance& instance, TabuSearchSolution& solution, Ta
 static random_device rd;
 static mt19937 rng(rd());
 
+static const u32 MIN_PENALTY = 1, MAX_PENALTY = 6400, INITIAL_PENALTY = 100,
+    PENALTY_UPDATE_ITERS = 10;
+
 CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIterations) {
     typedef function<void(const CvrpInstance&, TabuSearchSolution&, TabuSearchEdge&)> TabuSearchHeuristic;
 
@@ -331,6 +350,7 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
 
     uniform_int_distribution<int> tenureDistribution(5, 10);
     unordered_map<Edge, u8, PairHash> tabuList;
+    u32 penalty = INITIAL_PENALTY, valid = 0;
 
     for (size_t iter = 1; iter <= maxIterations; ++iter) {
         optional<TabuSearchSolution> iterationBest;
@@ -346,7 +366,7 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
                     for (size_t idxA = 1; idxA < tsrA.route.size() - 1; ++idxA) {
                         for (size_t idxB = 1; idxB < tsrB.route.size() - 1; ++idxB) {
                             if (isShort({tsrA.route[idxA], tsrB.route[idxB]})) {
-                                auto applyHeuristic = [&instance, &tabuList, &iterationBest, &removedEdges,
+                                auto applyHeuristic = [&instance, &tabuList, &penalty, &iterationBest, &removedEdges,
                                         &bestSolution, &currentSolution, &movesEvaluated, ra, rb, idxA, idxB]
                                         (const TabuSearchHeuristic& heuristic) {
                                     TabuSearchSolution newSolution = currentSolution;
@@ -365,12 +385,12 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
                                         }
                                     }
 
-                                    if (newSolution.length < bestSolution.length) {
+                                    if (newSolution.length < bestSolution.length && newSolution.isValid(instance)) {
                                         bestSolution = newSolution;
                                     }
 
                                     if (!tabu) {
-                                        if (!iterationBest.has_value() || newSolution.length < iterationBest->length) {
+                                        if (!iterationBest.has_value() || newSolution.lengthWithPenalty(instance, penalty) < iterationBest->lengthWithPenalty(instance, penalty)) {
                                             iterationBest = newSolution;
                                             removedEdges.clear();
                                             removedEdges.merge(edge.tsrA.removedEdges);
@@ -394,6 +414,8 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
             }
         }
 
+        if (iterationBest->isValid(instance)) ++valid;
+
         for (auto it = tabuList.cbegin(); it != tabuList.cend();) {
             tabuList[it->first] -= 1;
             if (tabuList[it->first] == 0) {
@@ -413,10 +435,21 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
             << "km" << endl;
 
         currentSolution = *iterationBest;
+
+        if (iter % PENALTY_UPDATE_ITERS == 0) {
+            if (valid == PENALTY_UPDATE_ITERS) {
+                // All valid
+                penalty = max(MIN_PENALTY, penalty / 2);
+            }
+            else if (valid == 0) {
+                // All invalid
+                penalty = min(MAX_PENALTY, penalty * 2);
+            }
+        }
     }
 
     cout << "Best solution found by algorithm has length " << bestSolution.length / 1000
         << "km" << endl;
 
-    return initialSolution;
+    return bestSolution.toStandardForm();
 }
