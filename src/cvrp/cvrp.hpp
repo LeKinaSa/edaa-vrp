@@ -26,6 +26,9 @@ class CvrpInstance {
         void readDistanceMatrixFromFile(const char* path);
         void writeDistanceMatrixToFile(const char* path) const;
 
+        double routeLength(const std::vector<u64>& route) const;
+        double routeWeight(const std::vector<u64>& route) const;
+
         void setDistance(size_t from, size_t to, double distance);
 
         std::vector<std::vector<u64>> distanceOrderedPoints() const;

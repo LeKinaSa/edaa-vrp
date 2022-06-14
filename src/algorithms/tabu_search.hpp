@@ -6,4 +6,6 @@
 
 CvrpSolution clarkeWrightSavings(const CvrpInstance& instance);
 
+CvrpSolution granularTabuSearch(const CvrpInstance& instance);
+
 #endif // TABU_SEARCH_H

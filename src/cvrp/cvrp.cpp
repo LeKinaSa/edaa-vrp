@@ -76,6 +76,22 @@ void CvrpInstance::writeDistanceMatrixToFile(const char* path) const {
     ofs.close();
 }
 
+double CvrpInstance::routeLength(const vector<u64>& route) const {
+    double length = 0;
+    for (size_t i = 0; i < route.size() - 1; ++i) {
+        length += distanceMatrix[route[i]][route[i + 1]];
+    }
+    return length;
+}
+
+double CvrpInstance::routeWeight(const vector<u64>& route) const {
+    double weight = 0;
+    for (size_t i = 1; i < route.size() - 1; ++i) {
+        weight += deliveries[route[i] - 1].size;
+    }
+    return weight;
+}
+
 void CvrpInstance::setDistance(size_t from, size_t to, double distance) {
     if (distance > 0) {
         distanceMatrix[from][to] = distance;

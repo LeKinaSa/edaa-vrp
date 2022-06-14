@@ -200,3 +200,53 @@ CvrpSolution clarkeWrightSavings(const CvrpInstance& instance) {
 
     return { convertedRoutes, length };
 }
+
+struct TabuSearchRoute {
+    list<u64> route;
+    double length, weight;
+};
+
+CvrpSolution granularTabuSearch(const CvrpInstance& instance) {
+    CvrpSolution initialSolution = clarkeWrightSavings(instance);
+    const vector<vector<double>>& distanceMatrix = instance.getDistanceMatrix();
+
+    double beta = 1.5;
+    auto isShort = [&beta, &instance, &initialSolution](const Edge& edge) {
+        return beta * initialSolution.length / (instance.getDeliveries().size() + initialSolution.routes.size());
+    };
+
+    vector<TabuSearchRoute> routes;
+    for (const auto& route : initialSolution.routes) {
+        list<u64> l;
+        l.insert(l.end(), route.begin(), route.end());
+        routes.push_back({l, instance.routeLength(route), instance.routeWeight(route)});
+    }
+
+    vector<Edge> validEdges;
+    for (size_t ra = 0; ra < routes.size(); ++ra) {
+        for (size_t rb = 0; rb < routes.size(); ++rb) {
+            if (ra != rb) {
+                TabuSearchRoute& tsrA = routes[ra];
+                TabuSearchRoute& tsrB = routes[rb];
+
+                auto itA = ++tsrA.route.begin();
+                auto itB = ++tsrB.route.begin();
+                auto stopA = --tsrA.route.end();
+                auto stopB = --tsrB.route.end();
+
+                for (; itA != stopA; ++itA) {
+                    for (; itB != stopB; ++itB) {
+                        Edge e = {*itA, *itB};
+                        if (isShort(e)) {
+                            validEdges.push_back(e);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    cout << validEdges.size() << endl;
+
+    return initialSolution;
+}
