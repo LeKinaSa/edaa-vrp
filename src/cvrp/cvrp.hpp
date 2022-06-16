@@ -31,7 +31,7 @@ class CvrpInstance {
 
         void setDistance(size_t from, size_t to, double distance);
 
-        std::vector<std::vector<u64>> distanceOrderedPoints() const;
+        std::vector<std::vector<u64>> distanceOrderedDeliveries() const;
     private:
         double vehicleCapacity;
         Coordinates origin;

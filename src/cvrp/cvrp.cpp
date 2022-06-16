@@ -98,7 +98,7 @@ void CvrpInstance::setDistance(size_t from, size_t to, double distance) {
     }
 }
 
-vector<vector<u64>> CvrpInstance::distanceOrderedPoints() const {
+vector<vector<u64>> CvrpInstance::distanceOrderedDeliveries() const {
     vector<vector<u64>> res;
     res.reserve(distanceMatrix.size());
 
@@ -107,7 +107,8 @@ vector<vector<u64>> CvrpInstance::distanceOrderedPoints() const {
         vector<u64> ordered;
         ordered.reserve(distanceMatrix.size());
 
-        for (u64 j = 0; j < distanceMatrix.size(); ++j) {
+        // Don't include edges going back to the depot, since we only want deliveries
+        for (u64 j = 1; j < distanceMatrix.size(); ++j) {
             if (i != j) {
                 heap.insert(j, distanceMatrix[i][j]);
             }
@@ -116,6 +117,7 @@ vector<vector<u64>> CvrpInstance::distanceOrderedPoints() const {
         while (!heap.empty()) {
             ordered.push_back(heap.extractMin());
         }
+        res.push_back(ordered);
     }
 
     return res;
