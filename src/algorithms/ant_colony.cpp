@@ -12,7 +12,7 @@ using namespace std;
 static random_device rd;
 static mt19937 rng(rd());
 
-CvrpSolution antColonyOptimization(const CvrpInstance& instance, size_t maxIterations) {
+CvrpSolution antColonyOptimization(const CvrpInstance& instance, size_t maxIterations, bool useSwapHeuristic) {
     CvrpSolution bestSolution = { {}, numeric_limits<double>::max() };
 
     const vector<CvrpDelivery>& deliveries = instance.getDeliveries();
@@ -21,8 +21,8 @@ CvrpSolution antColonyOptimization(const CvrpInstance& instance, size_t maxItera
 
     uniform_real_distribution dist;
     const double alpha = 1.0;
-    const double beta = 1.0;
-    const double evaporationCoefficient = 0.3;
+    const double beta = 2.0;
+    const double evaporationCoefficient = 0.25;
     const u32 numAnts = 250;
 
     vector<vector<double>> pheromones(distanceMatrix.size());
@@ -98,11 +98,46 @@ CvrpSolution antColonyOptimization(const CvrpInstance& instance, size_t maxItera
         return CvrpSolution { routes, length };
     };
 
+    auto improveRoutes = [&distanceMatrix](CvrpSolution& solution, u32 numIters = 5) {
+        for (size_t _ = 0; _ < numIters; ++_) {
+            for (auto& route : solution.routes) {
+                bool improvedRoute = false;
+
+                for (size_t idxI = 1; !improvedRoute && idxI < route.size() - 2; ++idxI) {
+                    u64 i = route[idxI], beforeI = route[idxI - 1], afterI = route[idxI + 1];
+                    for (size_t idxJ = idxI + 1; !improvedRoute && idxJ < route.size() - 1; ++idxJ) {
+                        u64 j = route[idxJ], beforeJ = route[idxJ - 1], afterJ = route[idxJ + 1];
+
+                        double delta = distanceMatrix[beforeI][j] + distanceMatrix[i][afterJ] -
+                            distanceMatrix[beforeI][i] - distanceMatrix[j][afterJ];
+
+                        if (idxJ - idxI == 1) {
+                            // Deliveries are adjacent
+                            delta += distanceMatrix[j][i] - distanceMatrix[i][j];
+                        }
+                        else {
+                            // Deliveries are not adjacent
+                            delta += distanceMatrix[j][afterI] + distanceMatrix[beforeJ][i] -
+                                distanceMatrix[i][afterI] - distanceMatrix[beforeJ][j];
+                        }
+
+                        if (delta < 0) {
+                            swap(route[idxI], route[idxJ]);
+                            solution.length += delta;
+                            improvedRoute = true;
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    vector<CvrpSolution> solutions;
+    solutions.resize(numAnts);
+
     for (size_t iter = 0; iter < maxIterations; ++iter) {
-        vector<CvrpSolution> solutions;
-        solutions.reserve(numAnts);
         for (u32 ant = 0; ant < numAnts; ++ant)
-            solutions.push_back(generateAntSolution());
+            solutions[ant] = generateAntSolution();
 
         for (auto& row : pheromones) {
             for (auto& elem : row) {
@@ -110,11 +145,14 @@ CvrpSolution antColonyOptimization(const CvrpInstance& instance, size_t maxItera
             }
         }
 
-        for (const auto& solution : solutions) {
+        for (auto& solution : solutions) {
+            if (useSwapHeuristic) improveRoutes(solution);
+
             if (solution.length < bestSolution.length) {
                 bestSolution = solution;
-                cout << "New best solution: " << solution.length / 1000 << "km." << endl;
+                cout << "[ITER. " << iter << "] New best solution: " << solution.length / 1000 << "km." << endl;
             }
+
             for (const auto& route : solution.routes) {
                 for (size_t idx = 0; idx < route.size() - 1; ++idx) {
                     u64 i = route[idx], j = route[idx + 1];

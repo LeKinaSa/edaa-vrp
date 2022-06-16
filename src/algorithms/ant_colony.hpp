@@ -4,6 +4,6 @@
 
 #include "../cvrp/cvrp.hpp"
 
-CvrpSolution antColonyOptimization(const CvrpInstance& instance, size_t maxIterations = 1000);
+CvrpSolution antColonyOptimization(const CvrpInstance& instance, size_t maxIterations = 1000, bool useSwapHeuristic = true);
 
 #endif // ANT_COLONY_H
