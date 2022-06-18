@@ -11,7 +11,7 @@
 **External Dependencies** (must be installed in the user's computer in order to compile and run the program)
 
 - CMake
-- C++ Compiler (for example, GCC)
+- C++ 17 Compiler (for example, GCC)
 - SFML (`libsfml-dev` package on Ubuntu / Debian based operating systems): used by the GraphViewerCpp internal dependency
 
 **Internal Dependencies** (are already included in the project; their installation is not required)
