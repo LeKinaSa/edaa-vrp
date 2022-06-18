@@ -27,6 +27,6 @@ add_executable(${PROJECT_NAME}
     lib/tinyxml/tinyxml2.cpp
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_FLAGS_OPTIMIZE}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 ${GCC_FLAGS_OPTIMIZE}")
 
 target_link_libraries(${PROJECT_NAME} PUBLIC graphviewer)
