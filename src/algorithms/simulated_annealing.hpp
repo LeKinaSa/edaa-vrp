@@ -4,6 +4,6 @@
 
 #include "../cvrp/cvrp.hpp"
 
-CvrpSolution simulatedAnnealing(const CvrpInstance& instance);
+CvrpSolution simulatedAnnealing(const CvrpInstance& instance, bool greedyInitialSolution = true);
 
 #endif // SIMULATED_ANNEALING_H
