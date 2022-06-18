@@ -10,8 +10,11 @@ add_subdirectory(lib/GraphViewerCpp)
 add_executable(${PROJECT_NAME}
     src/coordinates.cpp
     src/main.cpp
+    src/algorithms/ant_colony.cpp
     src/algorithms/a_star.cpp
+    src/algorithms/greedy.cpp
     src/algorithms/simulated_annealing.cpp
+    src/algorithms/tabu_search.cpp
     src/analysis/complexity.cpp
     src/analysis/real_data.cpp
     src/cvrp/cvrp.cpp

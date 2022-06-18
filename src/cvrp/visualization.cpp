@@ -1,6 +1,10 @@
 
 #include "visualization.hpp"
+#include "../algorithms/a_star.hpp"
 #include <unordered_map>
+#include <algorithm>
+#include <random>
+#include <chrono>
 
 using namespace std;
 
@@ -99,6 +103,34 @@ void highlightPath(GraphVisualizationResult& result, const list<u64>& path, cons
             edge.setColor(color);
 
             ++it;
+        }
+    }
+}
+
+static const u32 MAX_RGB = 510;
+
+void showSolution(GraphVisualizationResult& result, const MapMatchingResult& mmResult, const Graph<OsmNode>& graph, const CvrpSolution& solution) {
+    auto matchedNode = [mmResult](u64 idx) {
+        return idx == 0 ? mmResult.originNode : mmResult.deliveryNodes[idx - 1];
+    };
+
+    auto randomEngine = default_random_engine(
+        chrono::system_clock::now().time_since_epoch().count()
+    );
+
+    for (const auto& route : solution.routes) {
+        array<u32, 3> rgb = {0, 0, 0};
+        rgb[0] = min(MAX_RGB, (u32) rand() % 256);
+        rgb[1] = min(MAX_RGB - rgb[0], (u32) rand() % 256);
+        rgb[2] = min(MAX_RGB - rgb[0] - rgb[1], (u32) rand() % 256);
+        shuffle(rgb.begin(), rgb.end(), randomEngine);
+
+        auto color = sf::Color(rgb[0], rgb[1], rgb[2]);
+
+        for (int i = 0; i < route.size() - 1; ++i) {
+            u64 from = matchedNode(route[i]), to = matchedNode(route[i + 1]);
+            list<u64> path = aStarSearch(graph, from, to).first;
+            highlightPath(result, path, color);
         }
     }
 }
