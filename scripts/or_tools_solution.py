@@ -6,16 +6,16 @@ from ortools.constraint_solver import pywrapcp
 import argparse
 import json
 
-def create_data_model(args):
+def create_data_model(distance_matrix_path, cvrp_problem_path):
     """Stores the data for the problem."""
     data = {}
     
     lines = []
-    with open(args.dist_filename) as file:
+    with open(distance_matrix_path) as file:
         lines = file.readlines()
     data['distance_matrix'] = [[int(round(float(element) * 100, 0)) for element in line.split(' ')[:-1]] for line in lines]
 
-    with open(args.cvrp_filename) as file:
+    with open(cvrp_problem_path) as file:
         cvrp_info = json.load(file)
     data['demands'] = [0] + [delivery['size'] for delivery in cvrp_info['deliveries']]
     data['vehicle_capacity'] = cvrp_info['vehicle_capacity']
@@ -62,9 +62,16 @@ def main():
     parser.add_argument('dist_filename', type=str, help='path for the file with the distance matrix')
 
     args = parser.parse_args()
+    (data, manager, routing, solution) = cvrp(args.dist_filename, args.cvrp_filename)
 
+    # Print solution on console.
+    if solution:
+        print_solution(data, manager, routing, solution)
+
+
+def cvrp(distance_matrix_path, cvrp_problem_path, time_limit = 1):
     # Instantiate the data problem.
-    data = create_data_model(args)
+    data = create_data_model(distance_matrix_path, cvrp_problem_path)
 
     # Create the routing index manager.
     manager = pywrapcp.RoutingIndexManager(len(data['distance_matrix']), len(data['distance_matrix']), 0)
@@ -106,14 +113,11 @@ def main():
     search_parameters = pywrapcp.DefaultRoutingSearchParameters()
     search_parameters.first_solution_strategy = (routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC)
     search_parameters.local_search_metaheuristic = (routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH)
-    search_parameters.time_limit.FromSeconds(1)
+    search_parameters.time_limit.FromSeconds(time_limit)
 
     # Solve the problem.
     solution = routing.SolveWithParameters(search_parameters)
-
-    # Print solution on console.
-    if solution:
-        print_solution(data, manager, routing, solution)
+    return (data, manager, routing, solution)
 
 
 if __name__ == '__main__':
