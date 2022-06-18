@@ -51,47 +51,6 @@ const vector<vector<double>>& CvrpInstance::getDistanceMatrix() const {
     return distanceMatrix;
 }
 
-const vector<int> CvrpInstance::getInitialSolution() const {
-    int locations = deliveries.size();
-    vector<int> initialSolution = vector<int>();
-
-    for (int i = 1; i <= locations; ++i) {
-        initialSolution.push_back(i);
-        initialSolution.push_back(0);
-    }
-
-    initialSolution.pop_back();
-    return initialSolution;
-}
-
-const double CvrpInstance::calculateDistance(vector<int> solution) const {
-    int distance = distanceMatrix[0][solution[0]];
-
-    for (int i = 0, j = 1; j < solution.size(); ++i, ++j) {
-        distance += distanceMatrix[solution[i]][solution[j]];
-    }
-
-    distance += distanceMatrix[solution[solution.size()-1]][0];
-    return distance;
-}
-
-const bool CvrpInstance::isValid(std::vector<int> solution) const {
-    int capacity = 0;
-
-    for (int location : solution) {
-        if (location == 0) {
-            capacity = 0;
-            continue;
-        }
-        capacity += deliveries[location-1].size;
-        if (capacity > vehicleCapacity) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 void CvrpInstance::readDistanceMatrixFromFile(const char* path) {
     ifstream ifs(path);
 

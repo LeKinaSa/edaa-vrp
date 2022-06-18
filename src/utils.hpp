@@ -2,13 +2,19 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include "types.hpp"
 #include <cmath>
 #include <chrono>
 #include <mutex>
+#include <random>
+
+#include "types.hpp"
 
 inline double degToRad(double deg) {
     return deg * M_PI / 180.0;
+}
+
+inline int randomIntInclusive(int min, int max) {
+    return min + rand() % (max - min + 1);
 }
 
 template <typename T>

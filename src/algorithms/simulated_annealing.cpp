@@ -1,106 +1,152 @@
 
-#include <cmath>
-#include <vector>
 #include <algorithm>
-#include <stdlib.h>
-#include <time.h>
+#include <cmath>
+#include <cstdlib>
+#include <ctime>
+#include <vector>
+
 #include "simulated_annealing.hpp"
-#include "../cvrp/cvrp.hpp"
 
 using namespace std;
 
-const double INITIAL_TEMPERATURE = 5000;
-const double TEMPERATURE_DECREASE_PER_ITERATION = 0.1;
+static const double INITIAL_TEMPERATURE = 5000;
+static const double TEMPERATURE_DECREASE_PER_ITERATION = 0.125;
 
-vector<int> randomNeighbor(vector<int> oldSolution) {
-    vector<int> newSolution = vector<int>(oldSolution);
-    int randomValue = rand() % 4;
-    int one, two;
-    switch (randomValue) {
-        case 0: { // Swap
-            one = rand() % newSolution.size();
-            two = rand() % newSolution.size();
-            swap(newSolution[one], newSolution[two]);
-            break;
+// Initialize random number generator
+static random_device rd;
+static mt19937 rng(rd());
+
+vector<u64> initialSolution(size_t numDeliveries) {
+    vector<u64> solution;
+
+    for (int i = 1; i <= numDeliveries; ++i) {
+        solution.push_back(i);
+        solution.push_back(0);
+    }
+    solution.pop_back();
+
+    return solution;
+}
+
+double calculateSolutionLength(const vector<vector<double>>& distanceMatrix, const std::vector<u64>& solution) {
+    double length = distanceMatrix[0][solution.front()];
+
+    for (int i = 1; i < solution.size(); ++i) {
+        length += distanceMatrix[solution[i - 1]][solution[i]];
+    }
+    length += distanceMatrix[solution.back()][0];
+
+    return length;
+}
+
+bool isValid(const CvrpInstance& instance, const std::vector<u64>& solution) {
+    const vector<CvrpDelivery>& deliveries = instance.getDeliveries();
+    double vehicleCapacity = instance.getVehicleCapacity(), currentWeight = 0;
+
+    for (const auto& location : solution) {
+        if (location == 0) {
+            currentWeight = 0;
+            continue;
         }
-        case 1: { // Scramble
-            one = rand() %  newSolution.size();
-            two = rand() % (newSolution.size() - one) + one;
-            random_shuffle(newSolution.begin() + one, newSolution.begin() + two);
+        currentWeight += deliveries[location - 1].size;
+        if (currentWeight > vehicleCapacity) return false;
+    }
+
+    return true;
+}
+
+vector<u64> randomNeighbor(const vector<u64>& oldSolution) {
+    vector<u64> newSolution = oldSolution;
+
+    u8 heuristic = rand() % 4;
+    size_t i = rand() % (newSolution.size() - 1);
+    size_t j = randomIntInclusive(i + 1, newSolution.size() - 1);
+
+    switch (heuristic) {
+        case 0: // Swap
+            swap(newSolution[i], newSolution[j]);
             break;
-        }
+        case 1: // Scramble
+            random_shuffle(newSolution.begin() + i, newSolution.begin() + j + 1);
+            break;
         case 2: { // Insert
-            one = rand() %  newSolution.size();
-            two = rand() % (newSolution.size() - 1);
-            int value = newSolution[one];
-            newSolution.erase (newSolution.begin() + one);
-            newSolution.insert(newSolution.begin() + two, value);
+            u64 value = newSolution[i];
+            newSolution.erase(newSolution.begin() + i);
+            newSolution.insert(newSolution.begin() + j, value);
             break;
         }
-        case 3: { // Revert
-            one = rand() %  newSolution.size();
-            two = rand() % (newSolution.size() - one) + one;
-            reverse(newSolution.begin() + one, newSolution.begin() + two + 1);
+        case 3: // Reverse
+            reverse(newSolution.begin() + i, newSolution.begin() + j + 1);
             break;
-        }
-        default: {
-            break;
-        }
     }
+
     return newSolution;
 }
 
-vector<int> randomValidNeighbor(vector<int> oldSolution, CvrpInstance instance) {
-    vector<int> newSolution;
-    bool newSolutionIsValid = false;
-    while (!newSolutionIsValid) {
-        newSolution = randomNeighbor(oldSolution);
-        newSolutionIsValid = instance.isValid(newSolution);
+vector<u64> randomValidNeighbor(const CvrpInstance& instance, const vector<u64>& oldSolution) {
+    vector<u64> neighbor;
+
+    bool valid = false;
+    while (!valid) {
+        neighbor = randomNeighbor(oldSolution);
+        valid = isValid(instance, neighbor);
     }
-    return newSolution;
+
+    return neighbor;
 }
 
-vector<int> simulatedAnnealingAlgorithm(CvrpInstance instance) {
+vector<u64> simulatedAnnealingAlgorithm(CvrpInstance instance) {
     srand(time(NULL));
+    uniform_real_distribution dist;
+    const vector<vector<double>>& distanceMatrix = instance.getDistanceMatrix();
 
-    vector<int> oldSolution = instance.getInitialSolution();
-    double oldDistance = instance.calculateDistance(oldSolution);
-    
-    vector<int> bestSolution = oldSolution;
-    double bestDistance = oldDistance;
+    vector<u64> currentSolution = initialSolution(instance.getDeliveries().size());
+    double currentLength = calculateSolutionLength(distanceMatrix, currentSolution);
 
-    for(double temperature = INITIAL_TEMPERATURE; temperature > 0; temperature -= TEMPERATURE_DECREASE_PER_ITERATION) {
-        vector<int> newSolution = randomValidNeighbor(oldSolution, instance);
-        double newDistance = instance.calculateDistance(newSolution);
-        
-        if (newDistance < bestDistance) {
+    vector<u64> bestSolution = currentSolution;
+    double bestLength = currentLength;
+
+    for (double temperature = INITIAL_TEMPERATURE; temperature > 0; temperature -= TEMPERATURE_DECREASE_PER_ITERATION) {
+        vector<u64> newSolution = randomValidNeighbor(instance, currentSolution);
+        double newLength = calculateSolutionLength(distanceMatrix, newSolution);
+
+        if (newLength < bestLength) {
             bestSolution = newSolution;
-            bestDistance = newDistance;
+            bestLength = newLength;
         }
 
-        double deltaDistance = newDistance - oldDistance;
-        double randomProbability = (float) rand() / RAND_MAX;
-        if (deltaDistance <= 0 || exp(-deltaDistance / temperature) > randomProbability) {
-            oldSolution = move(newSolution);
-            oldDistance = newDistance;
+        double delta = newLength - currentLength;
+        double randomProbability = dist(rng);
+        if (delta <= 0 || exp(-delta / temperature) > randomProbability) {
+            currentSolution = move(newSolution);
+            currentLength = newLength;
         }
     }
 
     return bestSolution;
 }
 
-vector<int> simulatedAnnealing(CvrpInstance instance) {
-    vector<int> solution = simulatedAnnealingAlgorithm(instance);
-    vector<int> cleanSolution = vector<int>();
-    for (int i = -1, j = 0; j < solution.size(); ++i, ++j) {
-        int valueI = i >= 0 ? solution[i] : 0;
-        int valueJ = solution[j];
-        if (valueI + valueJ > 0) {
-            cleanSolution.push_back(solution[j]);
+CvrpSolution simulatedAnnealing(const CvrpInstance& instance) {
+    srand(time(nullptr));
+
+    vector<u64> solution = simulatedAnnealingAlgorithm(instance);
+    const vector<vector<double>>& distanceMatrix = instance.getDistanceMatrix();
+
+    vector<vector<u64>> routes;
+    double length = 0;
+
+    vector<u64> currentRoute = {0};
+    for (const auto& location : solution) {
+        length += distanceMatrix[currentRoute.back()][location];
+        currentRoute.push_back(solution[location]);
+        if (location == 0) {
+            routes.push_back(currentRoute);
+            currentRoute = {0};
         }
     }
-    if (cleanSolution.back() == 0) {
-        cleanSolution.pop_back();
-    }
-    return cleanSolution;
+    length += distanceMatrix[currentRoute.back()][0];
+    currentRoute.push_back(0);
+    routes.push_back(currentRoute);
+
+    return { routes, length };
 }
