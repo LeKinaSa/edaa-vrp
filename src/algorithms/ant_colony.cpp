@@ -150,7 +150,6 @@ CvrpSolution antColonyOptimization(const CvrpInstance& instance, size_t maxItera
 
             if (solution.length < bestSolution.length) {
                 bestSolution = solution;
-                cout << "[ITER. " << iter << "] New best solution: " << solution.length / 1000 << "km." << endl;
             }
 
             for (const auto& route : solution.routes) {

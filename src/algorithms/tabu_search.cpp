@@ -432,10 +432,6 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
             tabuList[edge] = tenureDistribution(rng);
         }
 
-        cout << "[ITER. " << iter << "] Evaluated " << movesEvaluated
-            << " moves, best non-tabu route has length " << iterationBest->length / 1000
-            << "km" << endl;
-
         currentSolution = move(*iterationBest);
 
         if (iter % PENALTY_UPDATE_ITERS == 0) {
@@ -450,9 +446,6 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
             valid = 0;
         }
     }
-
-    cout << "Best solution found by algorithm has length " << bestSolution.length / 1000
-        << "km" << endl;
 
     return bestSolution.toStandardForm();
 }
