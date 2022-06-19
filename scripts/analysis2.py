@@ -23,7 +23,7 @@ def solve(name:str, distance_matrix_path: str, cvrp_problem_path: str) -> Tuple[
                 previous_index, index, vehicle_id) / 100
             total_load += data['demands'][node_index]
         routes.append(route)
-    return (name, len(data['deliveries']), total_distance, len(routes), total_load / len(routes), (end_time - start_time) * 10**6)
+    return (name, len(data['demands']), total_distance, len(routes), total_load / len(routes), (end_time - start_time) * 10**6)
 
 if __name__=="__main__":
     files = ['0-pa-61', '0-pa-25', '0-pa-34', '0-df-12', '0-df-15', '0-df-44', '2-rj-17']
