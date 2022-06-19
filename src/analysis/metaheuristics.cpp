@@ -89,6 +89,7 @@ void metaheuristicComparison() {
     array<ofstream, NUM_METAHEURISTICS> fileStreams;
     for (size_t i = 0; i < NUM_METAHEURISTICS; ++i) {
         fileStreams[i] = ofstream(fileNames[i]);
+        fileStreams[i] << csvHeader;
     }
 
     for (const auto& name : cvrpInstances) {
