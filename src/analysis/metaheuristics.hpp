@@ -6,6 +6,5 @@ void metaheuristicComparison();
 
 void simulatedAnnealingAnalysis();
 void granularTabuSearchAnalysis();
-void antColonyOptimizationAnalysis();
 
 #endif // METAHEURISTICS_H

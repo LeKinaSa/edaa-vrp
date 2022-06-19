@@ -67,18 +67,20 @@ CvrpSolution antColonyOptimizationDefault(const CvrpInstance& instance) {
 }
 
 void metaheuristicComparison() {
-    static const u32 NUM_METAHEURISTICS = 4;
+    static const u32 NUM_METAHEURISTICS = 5;
 
     static const array<const char*, NUM_METAHEURISTICS> fileNames = {
         "greedy_analysis.csv",
+        "clarke_wright_analysis.csv",
         "sa_analysis.csv",
         "gts_analysis.csv",
         "aco_analysis.csv"
     };
 
-    static const array<u32, NUM_METAHEURISTICS> iterations = {1, 5, 1, 1};
+    static const array<u32, NUM_METAHEURISTICS> iterations = {1, 1, 5, 1, 1};
     static array<function<CvrpSolution(const CvrpInstance&)>, NUM_METAHEURISTICS> functions = {
         greedyAlgorithm,
+        clarkeWrightSavings,
         simulatedAnnealingDefault,
         granularTabuSearchDefault,
         antColonyOptimizationDefault,
@@ -93,7 +95,7 @@ void metaheuristicComparison() {
         CvrpInstance instance = loadInstance(name);
 
         for (size_t i = 0; i < NUM_METAHEURISTICS; ++i) {
-            for (size_t iter = 0; i < iterations[i]; ++iter) {
+            for (size_t iter = 0; iter < iterations[i]; ++iter) {
                 auto start = high_resolution_clock::now();
                 CvrpSolution solution = functions[i](instance);
                 auto end = high_resolution_clock::now();
@@ -174,8 +176,4 @@ void granularTabuSearchAnalysis() {
         printResults(ofs, name, instance, solution, interval<chrono::microseconds>(start, end));
     }
     ofs.close();
-}
-
-void antColonyOptimizationAnalysis() {
-
 }
