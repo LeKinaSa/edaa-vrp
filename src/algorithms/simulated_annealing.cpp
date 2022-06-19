@@ -5,6 +5,7 @@
 #include <ctime>
 #include <vector>
 
+#include "tabu_search.hpp"
 #include "simulated_annealing.hpp"
 #include "greedy.hpp"
 
@@ -17,23 +18,37 @@ static const double TEMPERATURE_DECREASE_PER_ITERATION = 0.005;
 static random_device rd;
 static mt19937 rng(rd());
 
-vector<u64> initialSolution(const CvrpInstance& instance, bool greedy) {
+vector<u64> convertSolution(const CvrpSolution& solution) {
+    vector<u64> converted;
+
+    for (const auto& route : solution.routes) {
+        converted.insert(converted.end(), route.begin() + 1, route.end());
+    }
+    converted.pop_back();
+
+    return converted;
+}
+
+vector<u64> initialSolution(const CvrpInstance& instance, InitialSolution type) {
     vector<u64> solution;
 
-    if (greedy) {
-        CvrpSolution greedySolution = greedyAlgorithm(instance);
-
-        for (const auto& route : greedySolution.routes) {
-            solution.insert(solution.end(), route.begin() + 1, route.end());
+    switch (type) {
+        case TRIVIAL:
+            for (u64 i = 1; i <= instance.getDeliveries().size(); ++i) {
+                solution.push_back(i);
+                solution.push_back(0);
+            }
+            solution.pop_back();
+            break;
+        case GREEDY: {
+            solution = convertSolution(greedyAlgorithm(instance));
+            break;
+        }
+        case CLARKE_WRIGHT: {
+            solution = convertSolution(clarkeWrightSavings(instance));
+            break;
         }
     }
-    else {
-        for (u64 i = 1; i <= instance.getDeliveries().size(); ++i) {
-            solution.push_back(i);
-            solution.push_back(0);
-        }
-    }
-    solution.pop_back();
 
     return solution;
 }
@@ -105,12 +120,12 @@ vector<u64> randomValidNeighbor(const CvrpInstance& instance, const vector<u64>&
     return neighbor;
 }
 
-vector<u64> simulatedAnnealingAlgorithm(const CvrpInstance& instance, bool greedyInitialSolution) {
+vector<u64> simulatedAnnealingAlgorithm(const CvrpInstance& instance, InitialSolution initialSolutionType) {
     srand(time(NULL));
     uniform_real_distribution dist;
     const vector<vector<double>>& distanceMatrix = instance.getDistanceMatrix();
 
-    vector<u64> currentSolution = initialSolution(instance, greedyInitialSolution);
+    vector<u64> currentSolution = initialSolution(instance, initialSolutionType);
     double currentLength = calculateSolutionLength(distanceMatrix, currentSolution);
 
     vector<u64> bestSolution = currentSolution;
@@ -136,10 +151,10 @@ vector<u64> simulatedAnnealingAlgorithm(const CvrpInstance& instance, bool greed
     return bestSolution;
 }
 
-CvrpSolution simulatedAnnealing(const CvrpInstance& instance, bool greedyInitialSolution) {
+CvrpSolution simulatedAnnealing(const CvrpInstance& instance, InitialSolution initialSolutionType) {
     srand(time(nullptr));
 
-    vector<u64> solution = simulatedAnnealingAlgorithm(instance, greedyInitialSolution);
+    vector<u64> solution = simulatedAnnealingAlgorithm(instance, initialSolutionType);
 
     // Normalize solution
     const vector<vector<double>>& distanceMatrix = instance.getDistanceMatrix();
