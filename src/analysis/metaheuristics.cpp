@@ -105,11 +105,75 @@ void metaheuristicComparison() {
 }
 
 void simulatedAnnealingAnalysis() {
+    static const char* name = "0-pa-34";
+    static const u32 iterations = 5;
 
+    CvrpInstance instance = loadInstance(name);
+    ofstream ofs;
+    
+    ofs.open("sa_trivial.csv");
+    ofs << csvHeader;
+    for (size_t i = 0; i < iterations; ++i) {
+        auto start = high_resolution_clock::now();
+        CvrpSolution solution = simulatedAnnealing(instance, TRIVIAL);
+        auto end = high_resolution_clock::now();
+        printResults(ofs, name, instance, solution, interval<chrono::microseconds>(start, end));
+    }
+    ofs.close();
+
+    ofs.open("sa_greedy.csv");
+    ofs << csvHeader;
+    for (size_t i = 0; i < iterations; ++i) {
+        auto start = high_resolution_clock::now();
+        CvrpSolution solution = simulatedAnnealing(instance, GREEDY);
+        auto end = high_resolution_clock::now();
+        printResults(ofs, name, instance, solution, interval<chrono::microseconds>(start, end));
+    }
+    ofs.close();
+
+    ofs.open("sa_clarke_wright.csv");
+    ofs << csvHeader;
+    for (size_t i = 0; i < iterations; ++i) {
+        auto start = high_resolution_clock::now();
+        CvrpSolution solution = simulatedAnnealing(instance, CLARKE_WRIGHT);
+        auto end = high_resolution_clock::now();
+        printResults(ofs, name, instance, solution, interval<chrono::microseconds>(start, end));
+    }
+    ofs.close();
 }
 
 void granularTabuSearchAnalysis() {
+    static const char* name = "0-pa-34";
+    static const array<double, 5> betaValues = {1.25, 1.5, 2, 2.5, 3};
+    static const array<u32, 5> iterationValues = {360, 300, 225, 180, 150};
 
+    CvrpInstance instance = loadInstance(name);
+    ofstream ofs;
+
+    ofs.open("gts_beta.csv");
+    ofs << "beta," << csvHeader;
+    for (double beta : betaValues) {
+        auto start = high_resolution_clock::now();
+        CvrpSolution solution = granularTabuSearch(instance, 300, beta);
+        auto end = high_resolution_clock::now();
+        ofs << beta << ",";
+        printResults(ofs, name, instance, solution, interval<chrono::microseconds>(start, end));
+    }
+    ofs.close();
+
+    ofs.open("gts_beta_iter.csv");
+    ofs << "beta,iterations," << csvHeader;
+    for (size_t i = 0; i < betaValues.size(); ++i) {
+        double beta = betaValues[i];
+        u32 iterations = iterationValues[i];
+
+        auto start = high_resolution_clock::now();
+        CvrpSolution solution = granularTabuSearch(instance, iterations, beta);
+        auto end = high_resolution_clock::now();
+        ofs << beta << "," << iterations << ",";
+        printResults(ofs, name, instance, solution, interval<chrono::microseconds>(start, end));
+    }
+    ofs.close();
 }
 
 void antColonyOptimizationAnalysis() {
