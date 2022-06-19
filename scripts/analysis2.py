@@ -8,9 +8,14 @@ def solve(name:str, distance_matrix_path: str, cvrp_problem_path: str) -> Tuple[
     start_time = time.time()
     (data, manager, routing, solution) = cvrp(distance_matrix_path, cvrp_problem_path, 3 * 60)
     end_time = time.time()
+
+    if solution is None:
+        return (name, len(data['demands']) - 1, 0, 0, 0, (end_time - start_time) * 10 ** 6)
+
     total_distance = 0
     total_load = 0
     routes = []
+
     for vehicle_id in range(len(data['distance_matrix'])):
         route = []
         index = routing.Start(vehicle_id)
@@ -22,10 +27,15 @@ def solve(name:str, distance_matrix_path: str, cvrp_problem_path: str) -> Tuple[
             total_distance += routing.GetArcCostForVehicle(
                 previous_index, index, vehicle_id) / 100
             total_load += data['demands'][node_index]
-        routes.append(route)
-    return (name, len(data['deliveries']), total_distance, len(routes), total_load / len(routes), (end_time - start_time) * 10**6)
+        node_index = manager.IndexToNode(index)
+        route.append(node_index)
 
-if __name__=="__main__":
+        if len(route) > 2:
+            routes.append(route)
+
+    return (name, len(data['demands']) - 1, total_distance, len(routes), total_load / len(routes), (end_time - start_time) * 10**6)
+
+if __name__ == '__main__':
     files = ['0-pa-61', '0-pa-25', '0-pa-34', '0-df-12', '0-df-15', '0-df-44', '2-rj-17']
     df = pd.DataFrame(columns=['name','num_deliveries','solution_length','num_vehicles','average_load','time_us'])
     for file in files:
@@ -34,7 +44,7 @@ if __name__=="__main__":
         cvrp_problem_path = f'data/train/{file_details[1]}-{file_details[0]}/cvrp-{file}.json'
         result = solve(file, distance_matrix_path, cvrp_problem_path)
         df.append(result)
-    df.to_csv('data/cvrp-benchmarks/cp_analysis.csv')
+    df.to_csv('data/cvrp-benchmarks/cp_analysis.csv', index=False)
     
 """
 ./cvrp --osm ../data/graphs/pa.xml --cvrp ../data/train/pa-0/cvrp-0-pa-61.json --dm ../data/distances/0-pa-61.txt
