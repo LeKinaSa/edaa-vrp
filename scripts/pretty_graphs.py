@@ -29,8 +29,6 @@ def get_data() -> pd.DataFrame:
 
 if __name__ == "__main__":
     data = get_data()
-    print(data)
-    print(data[data["method"] == "Constraint Programming"])
 
     sns.lineplot(data=data, x="num_deliveries", y="time_us", hue="method", lw=4).set(title="Time performance (μs) (lower is better)")
     plt.show()
@@ -40,3 +38,18 @@ if __name__ == "__main__":
 
     sns.barplot(data=data, x="num_deliveries", y="num_vehicles", hue="method").set(title="Number of trucks (lower is better)")
     plt.show()
+
+    sns.barplot(data=data, x="num_deliveries", y="average_load", hue="method").set(title="Average load (higher is better)")
+    plt.legend(loc='lower right')
+    plt.show()
+
+
+    instances = list(data[data["method"] == "Constraint Programming"]["name"])
+
+    for instance in instances:
+        instance_data = data[data["name"] == instance]
+        sns.scatterplot(data=instance_data, x="time_us", y="solution_length", hue="method", s=300).\
+            set(title=f"Time vs. solution length (instance {instance})", ylim=(0, None), xscale="log")
+            
+        plt.legend(loc='lower right')
+        plt.show()
