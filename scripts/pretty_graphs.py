@@ -1,4 +1,6 @@
 import pandas as pd, seaborn as sns, matplotlib.pyplot as plt
+from os import makedirs
+from os.path import exists
 
 sns.set(font_scale=1.5) # Adjust this if necessary
 
@@ -30,10 +32,17 @@ def get_data() -> pd.DataFrame:
 if __name__ == "__main__":
     data = get_data()
 
+    if not exists('data/pretty_graphs'):
+        makedirs('data/pretty_graphs')
+
     figsize = (22, 11)
     i = 1
     plt.figure(figsize=figsize)
-    sns.lineplot(data=data, x="num_deliveries", y="time_us", hue="method", lw=4).set(title="Time performance (μs) (lower is better)")
+    sns.lineplot(data=data
+                 [data['method'] != 'Simulated Annealing (Clarke Wright)']
+                 [data['method'] != 'Simulated Annealing (greedy)']
+                 [data['method'] != 'Simulated Annealing (trivial)'],
+                 x="num_deliveries", y="time_us", hue="method", lw=4).set(title="Time performance (μs) (lower is better)")
     plt.savefig(f"data/pretty_graphs/graph{i}.png")
 
     i += 1
