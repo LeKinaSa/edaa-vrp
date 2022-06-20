@@ -123,6 +123,6 @@ vector<vector<u64>> CvrpInstance::distanceOrderedDeliveries() const {
     return res;
 }
 
-bool CvrpSolution::operator<(const CvrpSolution& other) {
+bool CvrpSolution::operator<(const CvrpSolution& other) const {
     return length < other.length;
 }

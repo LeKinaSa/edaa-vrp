@@ -325,13 +325,12 @@ static mt19937 rng(rd());
 static const u32 MIN_PENALTY = 1, MAX_PENALTY = 6400, INITIAL_PENALTY = 100,
     PENALTY_UPDATE_ITERS = 10;
 
-CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIterations) {
+CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIterations, double beta) {
     typedef function<void(const CvrpInstance&, TabuSearchSolution&, TabuSearchEdge&)> TabuSearchHeuristic;
 
     CvrpSolution initialSolution = clarkeWrightSavings(instance);
     const vector<vector<double>>& distanceMatrix = instance.getDistanceMatrix();
 
-    double beta = 1.5;
     auto isShort = [&beta, &instance, &initialSolution](const Edge& edge) {
         double maxLength = beta * initialSolution.length / (instance.getDeliveries().size() + initialSolution.routes.size());
         double edgeLength = instance.getDistanceMatrix()[edge.first][edge.second];
@@ -432,10 +431,6 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
             tabuList[edge] = tenureDistribution(rng);
         }
 
-        cout << "[ITER. " << iter << "] Evaluated " << movesEvaluated
-            << " moves, best non-tabu route has length " << iterationBest->length / 1000
-            << "km" << endl;
-
         currentSolution = move(*iterationBest);
 
         if (iter % PENALTY_UPDATE_ITERS == 0) {
@@ -450,9 +445,6 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
             valid = 0;
         }
     }
-
-    cout << "Best solution found by algorithm has length " << bestSolution.length / 1000
-        << "km" << endl;
 
     return bestSolution.toStandardForm();
 }

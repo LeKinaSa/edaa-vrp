@@ -4,6 +4,12 @@
 
 #include "../cvrp/cvrp.hpp"
 
-CvrpSolution simulatedAnnealing(const CvrpInstance& instance);
+enum InitialSolution {
+    TRIVIAL,
+    GREEDY,
+    CLARKE_WRIGHT,
+};
+
+CvrpSolution simulatedAnnealing(const CvrpInstance& instance, InitialSolution initialSolutionType = InitialSolution::GREEDY);
 
 #endif // SIMULATED_ANNEALING_H

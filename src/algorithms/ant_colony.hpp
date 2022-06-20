@@ -4,6 +4,14 @@
 
 #include "../cvrp/cvrp.hpp"
 
-CvrpSolution antColonyOptimization(const CvrpInstance& instance, size_t maxIterations = 1000, bool useSwapHeuristic = true);
+struct AntColonyConfig {
+    size_t maxIterations = 250;
+    size_t numAnts = 100;
+    double alpha = 1.0, beta = 3.0;
+    u32 eliteAnts = 0;
+    bool useSwapHeuristic = true;
+};
+
+CvrpSolution antColonyOptimization(const CvrpInstance& instance, AntColonyConfig config);
 
 #endif // ANT_COLONY_H
