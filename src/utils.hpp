@@ -6,6 +6,7 @@
 #include <chrono>
 #include <mutex>
 #include <random>
+#include <ostream>
 
 #include "types.hpp"
 

@@ -16,9 +16,11 @@ add_executable(${PROJECT_NAME}
     src/algorithms/simulated_annealing.cpp
     src/algorithms/tabu_search.cpp
     src/analysis/complexity.cpp
+    src/analysis/metaheuristics.cpp
     src/analysis/real_data.cpp
     src/cvrp/cvrp.cpp
     src/cvrp/stage_1.cpp
+    src/cvrp/stage_2.cpp
     src/cvrp/visualization.cpp
     src/data_structures/quadtree.cpp
     src/data_structures/kd_tree.cpp

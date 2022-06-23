@@ -1,9 +1,10 @@
 
-#include "ant_colony.hpp"
 #include <unordered_set>
 #include <random>
 #include <limits>
+#include <set>
 
+#include "ant_colony.hpp"
 #include "../utils.hpp"
 
 using namespace std;
@@ -12,7 +13,7 @@ using namespace std;
 static random_device rd;
 static mt19937 rng(rd());
 
-CvrpSolution antColonyOptimization(const CvrpInstance& instance, size_t maxIterations, bool useSwapHeuristic) {
+CvrpSolution antColonyOptimization(const CvrpInstance& instance, AntColonyConfig config) {
     CvrpSolution bestSolution = { {}, numeric_limits<double>::max() };
 
     const vector<CvrpDelivery>& deliveries = instance.getDeliveries();
@@ -20,10 +21,7 @@ CvrpSolution antColonyOptimization(const CvrpInstance& instance, size_t maxItera
     const double capacity = instance.getVehicleCapacity();
 
     uniform_real_distribution dist;
-    const double alpha = 1.0;
-    const double beta = 2.0;
     const double evaporationCoefficient = 0.25;
-    const u32 numAnts = 250;
 
     vector<vector<double>> pheromones(distanceMatrix.size());
     for (auto& row : pheromones) {
@@ -31,8 +29,8 @@ CvrpSolution antColonyOptimization(const CvrpInstance& instance, size_t maxItera
         fill(row.begin(), row.end(), 1.0);
     }
 
-    auto transitionValue = [&distanceMatrix, &pheromones, alpha, beta](u64 i, u64 j) {
-        return pow(pheromones[i][j], alpha) * pow(1 / distanceMatrix[i][j], beta);
+    auto transitionValue = [&distanceMatrix, &pheromones, &config](u64 i, u64 j) {
+        return pow(pheromones[i][j], config.alpha) * pow(1 / distanceMatrix[i][j], config.beta);
     };
 
     auto generateAntSolution = [&deliveries, &distanceMatrix, &dist, &transitionValue, capacity]() {
@@ -41,7 +39,7 @@ CvrpSolution antColonyOptimization(const CvrpInstance& instance, size_t maxItera
         vector<u64> currentRoute = {0};
         double length = 0, currentWeight = 0;
 
-        auto isNodeValid = [&deliveries, &visited, &currentRoute, capacity, currentWeight](u64 i) {
+        auto isNodeValid = [&deliveries, &visited, &currentRoute, &capacity, &currentWeight](u64 i) {
             return currentRoute.back() != i &&
                 !visited.count(i) &&
                 (i == 0 || currentWeight + deliveries[i - 1].size <= capacity);
@@ -133,10 +131,10 @@ CvrpSolution antColonyOptimization(const CvrpInstance& instance, size_t maxItera
     };
 
     vector<CvrpSolution> solutions;
-    solutions.resize(numAnts);
+    solutions.resize(config.numAnts);
 
-    for (size_t iter = 0; iter < maxIterations; ++iter) {
-        for (u32 ant = 0; ant < numAnts; ++ant)
+    for (size_t iter = 0; iter < config.maxIterations; ++iter) {
+        for (u32 ant = 0; ant < config.numAnts; ++ant)
             solutions[ant] = generateAntSolution();
 
         for (auto& row : pheromones) {
@@ -145,18 +143,41 @@ CvrpSolution antColonyOptimization(const CvrpInstance& instance, size_t maxItera
             }
         }
 
+        set<CvrpSolution> eliteSolutions;
         for (auto& solution : solutions) {
-            if (useSwapHeuristic) improveRoutes(solution);
+            if (config.useSwapHeuristic) improveRoutes(solution);
 
             if (solution.length < bestSolution.length) {
                 bestSolution = solution;
-                cout << "[ITER. " << iter << "] New best solution: " << solution.length / 1000 << "km." << endl;
             }
 
-            for (const auto& route : solution.routes) {
-                for (size_t idx = 0; idx < route.size() - 1; ++idx) {
-                    u64 i = route[idx], j = route[idx + 1];
-                    pheromones[i][j] += 1 / solution.length;
+            if (config.eliteAnts == 0) {
+                for (const auto& route : solution.routes) {
+                    for (size_t idx = 0; idx < route.size() - 1; ++idx) {
+                        u64 i = route[idx], j = route[idx + 1];
+                        pheromones[i][j] += 1 / solution.length;
+                    }
+                }
+            }
+            else {
+                if (eliteSolutions.size() < config.eliteAnts) {
+                    eliteSolutions.insert(solution);
+                }
+                else if (!eliteSolutions.empty() && solution.length < eliteSolutions.rbegin()->length) {
+                    auto it = eliteSolutions.end(); --it;
+                    eliteSolutions.erase(it);
+                    eliteSolutions.insert(solution);
+                }
+            }
+        }
+
+        if (config.eliteAnts > 0) {
+            for (const auto& eliteSolution : eliteSolutions) {
+                for (const auto& route : eliteSolution.routes) {
+                    for (size_t idx = 0; idx < route.size() - 1; ++idx) {
+                        u64 i = route[idx], j = route[idx + 1];
+                        pheromones[i][j] += 1 / eliteSolution.length;
+                    }
                 }
             }
         }

@@ -42,6 +42,9 @@ CvrpSolution greedyAlgorithm(const CvrpInstance& instance) {
             currentWeight = 0;
         }
     }
+    length += dm[currentRoute.back()][0];
+    currentRoute.push_back(0);
+    routes.push_back(currentRoute);
 
     return { routes, length };
 }

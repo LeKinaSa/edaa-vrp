@@ -43,7 +43,7 @@ struct CvrpSolution {
     std::vector<std::vector<u64>> routes;
     double length;
 
-    bool operator<(const CvrpSolution& other);
+    bool operator<(const CvrpSolution& other) const;
 };
 
 #endif // CVRP_H
