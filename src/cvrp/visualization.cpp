@@ -12,8 +12,9 @@ sf::Vector2f vecFromCoordinates(const Coordinates& coords, float scale = 1.0) {
     return sf::Vector2f(coords.getLongitude() * scale, coords.getLatitude() * scale);
 }
 
-GraphVisualizationResult generateGraphVisualization(const OsmXmlData& data, float scale) {
-    GraphVisualizationResult result;
+GraphVisualizationResult* generateGraphVisualization(const OsmXmlData& data, float scale) {
+    GraphVisualizationResult* resultPtr = new GraphVisualizationResult();
+    GraphVisualizationResult& result = *resultPtr;
 
     // TODO: make this a parameter?
     result.gv->setScale(5);
@@ -49,7 +50,7 @@ GraphVisualizationResult generateGraphVisualization(const OsmXmlData& data, floa
     );
     setGraphCenter(*(result.gv), center, scale);
 
-    return result;
+    return resultPtr;
 }
 
 void setGraphCenter(GraphViewer& gv, const Coordinates& coords, float scale) {
@@ -110,13 +111,19 @@ void highlightPath(GraphVisualizationResult& result, const list<u64>& path, cons
 static const u32 MAX_RGB = 510;
 
 void showSolution(GraphVisualizationResult& result, const MapMatchingResult& mmResult, const Graph<OsmNode>& graph, const CvrpSolution& solution) {
-    auto matchedNode = [mmResult](u64 idx) {
+    auto matchedNode = [&mmResult](u64 idx) {
         return idx == 0 ? mmResult.originNode : mmResult.deliveryNodes[idx - 1];
     };
 
     auto randomEngine = default_random_engine(
         chrono::system_clock::now().time_since_epoch().count()
     );
+
+    auto& origin = result.gv->getNode(mmResult.originNode);
+    origin.setColor(sf::Color::Green);
+    origin.setSize(35);
+    origin.setLabel("O");
+    origin.enable();
 
     for (const auto& route : solution.routes) {
         array<u32, 3> rgb = {0, 0, 0};
@@ -131,6 +138,14 @@ void showSolution(GraphVisualizationResult& result, const MapMatchingResult& mmR
             u64 from = matchedNode(route[i]), to = matchedNode(route[i + 1]);
             list<u64> path = aStarSearch(graph, from, to).first;
             highlightPath(result, path, color);
+
+            if (route[i + 1] != 0) {
+                auto& node = result.gv->getNode(to);
+                node.setColor(color);
+                node.setSize(35);
+                node.setLabel(to_string(route[i + 1]));
+                node.enable();
+            }
         }
     }
 }
