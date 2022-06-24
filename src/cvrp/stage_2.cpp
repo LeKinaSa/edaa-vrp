@@ -37,12 +37,14 @@ bool convertBool(const string& str) {
 CvrpSolution applyAntColonyOptimization(const CvrpInstance& instance, bool config) {
     AntColonyConfig acoConfig;
 
-    readOption<double>(acoConfig.alpha, "Alpha: ", convertDouble);
-    readOption<double>(acoConfig.beta, "Beta: ", convertDouble);
-    readOption<u64>(acoConfig.numAnts, "Num ants: ", convertUnsignedInt);
-    readOption<u32>(acoConfig.eliteAnts, "Elite ants: ", convertUnsignedInt);
-    readOption<u64>(acoConfig.maxIterations, "Max. iterations: ", convertUnsignedInt);
-    readOption<bool>(acoConfig.useSwapHeuristic, "Use swap heuristic (yes / no): ", convertBool);
+    if (config) {
+        readOption<double>(acoConfig.alpha, "Alpha: ", convertDouble);
+        readOption<double>(acoConfig.beta, "Beta: ", convertDouble);
+        readOption<u64>(acoConfig.numAnts, "Num ants: ", convertUnsignedInt);
+        readOption<u32>(acoConfig.eliteAnts, "Elite ants: ", convertUnsignedInt);
+        readOption<u64>(acoConfig.maxIterations, "Max. iterations: ", convertUnsignedInt);
+        readOption<bool>(acoConfig.useSwapHeuristic, "Use swap heuristic (yes / no): ", convertBool);
+    }
 
     return antColonyOptimization(instance, acoConfig);
 }
@@ -55,8 +57,10 @@ CvrpSolution applyGranularTabuSearch(const CvrpInstance& instance, bool config) 
     size_t maxIterations = 1000;
     double beta = 1.5;
 
-    readOption<u64>(maxIterations, "Max. iterations: ", convertUnsignedInt);
-    readOption<double>(beta, "Beta: ", convertDouble);
+    if (config) {
+        readOption<u64>(maxIterations, "Max. iterations: ", convertUnsignedInt);
+        readOption<double>(beta, "Beta: ", convertDouble);
+    }
 
     return granularTabuSearch(instance, maxIterations, beta);
 }
@@ -68,17 +72,19 @@ CvrpSolution applyGreedyAlgorithm(const CvrpInstance& instance, bool config) {
 CvrpSolution applySimulatedAnnealing(const CvrpInstance& instance, bool config) {
     InitialSolution initialSolution;
 
-    readOption<InitialSolution>(
-        initialSolution,
-        "Initial solution (0 - trivial, 1 - greedy, 2 - Clarke-Wright): ",
-        [](const string& str) { return (InitialSolution) stoi(str); }
-    );
+    if (config) {
+        readOption<InitialSolution>(
+            initialSolution,
+            "Initial solution (0 - trivial, 1 - greedy, 2 - Clarke-Wright): ",
+            [](const string& str) { return (InitialSolution) stoi(str); }
+        );
+    }
 
     return simulatedAnnealing(instance, initialSolution);
 }
 
 CvrpSolution applyCvrpAlgorithm(string algorithm, const CvrpInstance& instance, bool config) {
-    static const unordered_map<const char*, function<CvrpSolution(const CvrpInstance&, bool)>> algorithms = {
+    static const unordered_map<string, function<CvrpSolution(const CvrpInstance&, bool)>> algorithms = {
         {"aco", applyAntColonyOptimization},
         {"cws", applyClarkeWrightSavings},
         {"gts", applyGranularTabuSearch},

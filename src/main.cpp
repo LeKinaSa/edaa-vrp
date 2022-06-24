@@ -15,7 +15,7 @@
 
 using namespace std;
 
-static const unordered_set<const char*> algorithms = {
+static const unordered_set<string> algorithms = {
     "greedy", "cws", "sa", "gts", "aco"
 };
 
@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
     string cvrpAlgorithm = "cws";
     if (result.count("algorithm")) {
         cvrpAlgorithm = result["algorithm"].as<string>();
-        if (!algorithms.count(cvrpAlgorithm.c_str())) {
+        if (!algorithms.count(cvrpAlgorithm)) {
             cerr << "Error: `algorithm` must be a valid CVRP algorithm (given: '"
                 << cvrpAlgorithm << "')." << endl;
             exit(1);
@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
         ifstream ifs(cvrpPath);
         CvrpInstance instance(ifs);
 
-        GraphVisualizationResult* gvr;
+        GraphVisualizationResult* gvr = nullptr;
         GraphViewer* gv = nullptr;
 
         if (spVis || mmVis || solVis) {
@@ -161,7 +161,7 @@ int main(int argc, char** argv) {
             gv->closeWindow();
         }
 
-        delete gvr;
+        if (gvr != nullptr) delete gvr;
     }
     else {
         cerr << "Error: `cvrp` and `osm` options are required." << endl;
