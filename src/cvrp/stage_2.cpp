@@ -70,17 +70,19 @@ CvrpSolution applyGreedyAlgorithm(const CvrpInstance& instance, bool config) {
 }
 
 CvrpSolution applySimulatedAnnealing(const CvrpInstance& instance, bool config) {
-    InitialSolution initialSolution;
+    SimulatedAnnealingConfig saConfig;
 
     if (config) {
         readOption<InitialSolution>(
-            initialSolution,
+            saConfig.initialSolutionType,
             "Initial solution (0 - trivial, 1 - greedy, 2 - Clarke-Wright): ",
             [](const string& str) { return (InitialSolution) stoi(str); }
         );
+
+        readOption<u64>(saConfig.numIters, "Num. iterations: ", convertUnsignedInt);
     }
 
-    return simulatedAnnealing(instance, initialSolution);
+    return simulatedAnnealing(instance, saConfig);
 }
 
 CvrpSolution applyCvrpAlgorithm(string algorithm, const CvrpInstance& instance, bool config) {

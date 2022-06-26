@@ -11,8 +11,7 @@
 
 using namespace std;
 
-static const double INITIAL_TEMPERATURE = 5000;
-static const double TEMPERATURE_DECREASE_PER_ITERATION = 0.005;
+static const double MIN_TEMPERATURE = 1;
 
 // Initialize random number generator
 static random_device rd;
@@ -120,18 +119,21 @@ vector<u64> randomValidNeighbor(const CvrpInstance& instance, const vector<u64>&
     return neighbor;
 }
 
-vector<u64> simulatedAnnealingAlgorithm(const CvrpInstance& instance, InitialSolution initialSolutionType) {
+vector<u64> simulatedAnnealingAlgorithm(const CvrpInstance& instance, const SimulatedAnnealingConfig& config) {
     srand(time(NULL));
     uniform_real_distribution dist;
     const vector<vector<double>>& distanceMatrix = instance.getDistanceMatrix();
 
-    vector<u64> currentSolution = initialSolution(instance, initialSolutionType);
+    vector<u64> currentSolution = initialSolution(instance, config.initialSolutionType);
     double currentLength = calculateSolutionLength(distanceMatrix, currentSolution);
 
     vector<u64> bestSolution = currentSolution;
     double bestLength = currentLength;
 
-    for (double temperature = INITIAL_TEMPERATURE; temperature > 0; temperature -= TEMPERATURE_DECREASE_PER_ITERATION) {
+    double temperature = bestLength;
+    double temperatureDecrease = pow(MIN_TEMPERATURE / temperature, 1.0 / (config.numIters - 1.0));
+
+    while (temperature > MIN_TEMPERATURE) {
         vector<u64> newSolution = randomValidNeighbor(instance, currentSolution);
         double newLength = calculateSolutionLength(distanceMatrix, newSolution);
 
@@ -142,19 +144,21 @@ vector<u64> simulatedAnnealingAlgorithm(const CvrpInstance& instance, InitialSol
 
         double delta = newLength - currentLength;
         double randomProbability = dist(rng);
-        if (delta <= 0 || exp(-delta / temperature) > randomProbability) {
+        if (delta <= 0 || randomProbability <= exp(-delta / temperature)) {
             currentSolution = move(newSolution);
             currentLength = newLength;
         }
+
+        temperature *= temperatureDecrease;
     }
 
     return bestSolution;
 }
 
-CvrpSolution simulatedAnnealing(const CvrpInstance& instance, InitialSolution initialSolutionType) {
+CvrpSolution simulatedAnnealing(const CvrpInstance& instance, SimulatedAnnealingConfig config) {
     srand(time(nullptr));
 
-    vector<u64> solution = simulatedAnnealingAlgorithm(instance, initialSolutionType);
+    vector<u64> solution = simulatedAnnealingAlgorithm(instance, config);
 
     // Normalize solution
     const vector<vector<double>>& distanceMatrix = instance.getDistanceMatrix();

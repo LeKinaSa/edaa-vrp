@@ -52,7 +52,8 @@ void printResults(ofstream& ofs, const string& name, const CvrpInstance& instanc
 }
 
 CvrpSolution simulatedAnnealingDefault(const CvrpInstance& instance) {
-    return simulatedAnnealing(instance);
+    SimulatedAnnealingConfig config;
+    return simulatedAnnealing(instance, config);
 }
 
 CvrpSolution granularTabuSearchDefault(const CvrpInstance& instance) {
@@ -113,12 +114,14 @@ void simulatedAnnealingAnalysis() {
 
     CvrpInstance instance = loadInstance(name);
     ofstream ofs;
+    SimulatedAnnealingConfig config;
     
     ofs.open("sa_trivial.csv");
     ofs << csvHeader;
+    config.initialSolutionType = TRIVIAL;
     for (size_t i = 0; i < iterations; ++i) {
         auto start = high_resolution_clock::now();
-        CvrpSolution solution = simulatedAnnealing(instance, TRIVIAL);
+        CvrpSolution solution = simulatedAnnealing(instance, config);
         auto end = high_resolution_clock::now();
         printResults(ofs, name, instance, solution, interval<chrono::microseconds>(start, end));
     }
@@ -126,9 +129,10 @@ void simulatedAnnealingAnalysis() {
 
     ofs.open("sa_greedy.csv");
     ofs << csvHeader;
+    config.initialSolutionType = GREEDY;
     for (size_t i = 0; i < iterations; ++i) {
         auto start = high_resolution_clock::now();
-        CvrpSolution solution = simulatedAnnealing(instance, GREEDY);
+        CvrpSolution solution = simulatedAnnealing(instance, config);
         auto end = high_resolution_clock::now();
         printResults(ofs, name, instance, solution, interval<chrono::microseconds>(start, end));
     }
@@ -136,9 +140,10 @@ void simulatedAnnealingAnalysis() {
 
     ofs.open("sa_clarke_wright.csv");
     ofs << csvHeader;
+    config.initialSolutionType = CLARKE_WRIGHT;
     for (size_t i = 0; i < iterations; ++i) {
         auto start = high_resolution_clock::now();
-        CvrpSolution solution = simulatedAnnealing(instance, CLARKE_WRIGHT);
+        CvrpSolution solution = simulatedAnnealing(instance, config);
         auto end = high_resolution_clock::now();
         printResults(ofs, name, instance, solution, interval<chrono::microseconds>(start, end));
     }
