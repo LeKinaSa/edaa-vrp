@@ -4,6 +4,6 @@
 
 #include "../cvrp/cvrp.hpp"
 
-CvrpSolution greedyAlgorithm(const CvrpInstance& instance);
+CvrpSolution greedyAlgorithm(const CvrpInstance& instance, bool printLogs = false);
 
 #endif

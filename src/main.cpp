@@ -148,7 +148,7 @@ int main(int argc, char** argv) {
             }
         }
 
-        CvrpSolution solution = applyCvrpAlgorithm(cvrpAlgorithm, instance, config);
+        CvrpSolution solution = applyCvrpAlgorithm(cvrpAlgorithm, instance, config, logs);
 
         cout << "Final solution has length " << solution.length / 1000.0 << " and uses "
             << solution.routes.size() << " vehicles." << endl;

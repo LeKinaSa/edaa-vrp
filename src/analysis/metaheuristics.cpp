@@ -51,6 +51,14 @@ void printResults(ofstream& ofs, const string& name, const CvrpInstance& instanc
         << averageCargo << ")" << endl;
 }
 
+CvrpSolution greedyAlgorithmDefault(const CvrpInstance& instance) {
+    return greedyAlgorithm(instance);
+}
+
+CvrpSolution clarkeWrightSavingsDefault(const CvrpInstance& instance) {
+    return clarkeWrightSavings(instance);
+}
+
 CvrpSolution simulatedAnnealingDefault(const CvrpInstance& instance) {
     SimulatedAnnealingConfig config;
     return simulatedAnnealing(instance, config);
@@ -80,8 +88,8 @@ void metaheuristicComparison() {
 
     static const array<u32, NUM_METAHEURISTICS> iterations = {1, 1, 5, 1, 1};
     static array<function<CvrpSolution(const CvrpInstance&)>, NUM_METAHEURISTICS> functions = {
-        greedyAlgorithm,
-        clarkeWrightSavings,
+        greedyAlgorithmDefault,
+        clarkeWrightSavingsDefault,
         simulatedAnnealingDefault,
         granularTabuSearchDefault,
         antColonyOptimizationDefault,

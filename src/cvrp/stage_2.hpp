@@ -5,6 +5,6 @@
 #include <string>
 #include "cvrp.hpp"
 
-CvrpSolution applyCvrpAlgorithm(std::string algorithm, const CvrpInstance& instance,  bool config);
+CvrpSolution applyCvrpAlgorithm(std::string algorithm, const CvrpInstance& instance, bool config, bool printLogs);
 
 #endif // CVRP_STAGE_2_H

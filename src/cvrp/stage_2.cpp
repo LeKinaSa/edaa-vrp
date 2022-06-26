@@ -34,7 +34,7 @@ bool convertBool(const string& str) {
     return lower == "yes";
 }
 
-CvrpSolution applyAntColonyOptimization(const CvrpInstance& instance, bool config) {
+CvrpSolution applyAntColonyOptimization(const CvrpInstance& instance, bool config, bool printLogs) {
     AntColonyConfig acoConfig;
 
     if (config) {
@@ -46,14 +46,14 @@ CvrpSolution applyAntColonyOptimization(const CvrpInstance& instance, bool confi
         readOption<bool>(acoConfig.useSwapHeuristic, "Use swap heuristic (yes / no): ", convertBool);
     }
 
-    return antColonyOptimization(instance, acoConfig);
+    return antColonyOptimization(instance, acoConfig, printLogs);
 }
 
-CvrpSolution applyClarkeWrightSavings(const CvrpInstance& instance, bool config) {
-    return clarkeWrightSavings(instance);
+CvrpSolution applyClarkeWrightSavings(const CvrpInstance& instance, bool config, bool printLogs) {
+    return clarkeWrightSavings(instance, printLogs);
 }
 
-CvrpSolution applyGranularTabuSearch(const CvrpInstance& instance, bool config) {
+CvrpSolution applyGranularTabuSearch(const CvrpInstance& instance, bool config, bool printLogs) {
     size_t maxIterations = 1000;
     double beta = 1.5;
 
@@ -62,14 +62,14 @@ CvrpSolution applyGranularTabuSearch(const CvrpInstance& instance, bool config) 
         readOption<double>(beta, "Beta: ", convertDouble);
     }
 
-    return granularTabuSearch(instance, maxIterations, beta);
+    return granularTabuSearch(instance, maxIterations, beta, printLogs);
 }
 
-CvrpSolution applyGreedyAlgorithm(const CvrpInstance& instance, bool config) {
-    return greedyAlgorithm(instance);
+CvrpSolution applyGreedyAlgorithm(const CvrpInstance& instance, bool config, bool printLogs) {
+    return greedyAlgorithm(instance, printLogs);
 }
 
-CvrpSolution applySimulatedAnnealing(const CvrpInstance& instance, bool config) {
+CvrpSolution applySimulatedAnnealing(const CvrpInstance& instance, bool config, bool printLogs) {
     SimulatedAnnealingConfig saConfig;
 
     if (config) {
@@ -82,11 +82,11 @@ CvrpSolution applySimulatedAnnealing(const CvrpInstance& instance, bool config) 
         readOption<u64>(saConfig.numIters, "Num. iterations: ", convertUnsignedInt);
     }
 
-    return simulatedAnnealing(instance, saConfig);
+    return simulatedAnnealing(instance, saConfig, printLogs);
 }
 
-CvrpSolution applyCvrpAlgorithm(string algorithm, const CvrpInstance& instance, bool config) {
-    static const unordered_map<string, function<CvrpSolution(const CvrpInstance&, bool)>> algorithms = {
+CvrpSolution applyCvrpAlgorithm(string algorithm, const CvrpInstance& instance, bool config, bool printLogs) {
+    static const unordered_map<string, function<CvrpSolution(const CvrpInstance&, bool, bool)>> algorithms = {
         {"aco", applyAntColonyOptimization},
         {"cws", applyClarkeWrightSavings},
         {"gts", applyGranularTabuSearch},
@@ -95,7 +95,7 @@ CvrpSolution applyCvrpAlgorithm(string algorithm, const CvrpInstance& instance, 
     };
 
     if (algorithms.count(algorithm.c_str())) {
-        return algorithms.at(algorithm.c_str())(instance, config);
+        return algorithms.at(algorithm.c_str())(instance, config, printLogs);
     }
 
     return { {} , 0 };

@@ -119,7 +119,7 @@ vector<u64> randomValidNeighbor(const CvrpInstance& instance, const vector<u64>&
     return neighbor;
 }
 
-vector<u64> simulatedAnnealingAlgorithm(const CvrpInstance& instance, const SimulatedAnnealingConfig& config) {
+vector<u64> simulatedAnnealingAlgorithm(const CvrpInstance& instance, const SimulatedAnnealingConfig& config, bool printLogs) {
     srand(time(NULL));
     uniform_real_distribution dist;
     const vector<vector<double>>& distanceMatrix = instance.getDistanceMatrix();
@@ -129,6 +129,8 @@ vector<u64> simulatedAnnealingAlgorithm(const CvrpInstance& instance, const Simu
 
     vector<u64> bestSolution = currentSolution;
     double bestLength = currentLength;
+
+    if (printLogs) cout << "Initial solution: " << currentLength / 1000.0 << endl;
 
     double temperature = bestLength;
     double temperatureDecrease = pow(MIN_TEMPERATURE / temperature, 1.0 / (config.numIters - 1.0));
@@ -140,6 +142,7 @@ vector<u64> simulatedAnnealingAlgorithm(const CvrpInstance& instance, const Simu
         if (newLength < bestLength) {
             bestSolution = newSolution;
             bestLength = newLength;
+            if (printLogs) cout << "New best solution: " << bestLength / 1000.0 << endl;
         }
 
         double delta = newLength - currentLength;
@@ -155,10 +158,10 @@ vector<u64> simulatedAnnealingAlgorithm(const CvrpInstance& instance, const Simu
     return bestSolution;
 }
 
-CvrpSolution simulatedAnnealing(const CvrpInstance& instance, SimulatedAnnealingConfig config) {
+CvrpSolution simulatedAnnealing(const CvrpInstance& instance, SimulatedAnnealingConfig config, bool printLogs) {
     srand(time(nullptr));
 
-    vector<u64> solution = simulatedAnnealingAlgorithm(instance, config);
+    vector<u64> solution = simulatedAnnealingAlgorithm(instance, config, printLogs);
 
     // Normalize solution
     const vector<vector<double>>& distanceMatrix = instance.getDistanceMatrix();
@@ -177,6 +180,9 @@ CvrpSolution simulatedAnnealing(const CvrpInstance& instance, SimulatedAnnealing
     length += distanceMatrix[currentRoute.back()][0];
     currentRoute.push_back(0);
     if (currentRoute.size() > 2) routes.push_back(currentRoute);
+
+    if (printLogs) cout << "Final solution has length " << length / 1000.0 << ", uses "
+        << routes.size() << " vehicles." << endl;
 
     return { routes, length };
 }

@@ -15,6 +15,6 @@ struct SimulatedAnnealingConfig {
     size_t numIters = 10'000'000;
 };
 
-CvrpSolution simulatedAnnealing(const CvrpInstance& instance, SimulatedAnnealingConfig config);
+CvrpSolution simulatedAnnealing(const CvrpInstance& instance, SimulatedAnnealingConfig config, bool printLogs = false);
 
 #endif // SIMULATED_ANNEALING_H

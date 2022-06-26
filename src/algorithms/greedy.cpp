@@ -5,7 +5,7 @@
 
 using namespace std;
 
-CvrpSolution greedyAlgorithm(const CvrpInstance& instance) {
+CvrpSolution greedyAlgorithm(const CvrpInstance& instance, bool printLogs) {
     double capacity = instance.getVehicleCapacity();
     const vector<CvrpDelivery>& deliveries = instance.getDeliveries();
     const vector<vector<double>>& dm = instance.getDistanceMatrix();
@@ -45,6 +45,9 @@ CvrpSolution greedyAlgorithm(const CvrpInstance& instance) {
     length += dm[currentRoute.back()][0];
     currentRoute.push_back(0);
     routes.push_back(currentRoute);
+
+    if (printLogs) cout << "Final solution has length " << length / 1000.0 << ", uses "
+        << routes.size() << " vehicles." << endl;
 
     return { routes, length };
 }
