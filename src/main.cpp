@@ -148,13 +148,17 @@ int main(int argc, char** argv) {
             }
         }
 
+        cout << "Applying CVRP algorithm..." << endl;
+
         CvrpSolution solution = applyCvrpAlgorithm(cvrpAlgorithm, instance, config, logs);
 
-        cout << "Final solution has length " << solution.length / 1000.0 << " and uses "
-            << solution.routes.size() << " vehicles." << endl;
+        if (!logs) cout << "Final solution has length " << solution.length / 1000.0
+            << " and uses " << solution.routes.size() << " vehicles." << endl;
 
         if (solVis) {
             showSolution(*gvr, mmResult, data.graph, solution);
+            setGraphCenter(*gv, instance.getOrigin());
+
             gv->setZipEdges(true);
             gv->createWindow(1280, 720);
             gv->join();

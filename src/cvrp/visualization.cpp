@@ -121,8 +121,9 @@ void showSolution(GraphVisualizationResult& result, const MapMatchingResult& mmR
 
     auto& origin = result.gv->getNode(mmResult.originNode);
     origin.setColor(sf::Color::Green);
-    origin.setSize(35);
+    origin.setSize(60);
     origin.setLabel("O");
+    origin.setLabelSize(30);
     origin.enable();
 
     for (const auto& route : solution.routes) {
@@ -142,8 +143,9 @@ void showSolution(GraphVisualizationResult& result, const MapMatchingResult& mmR
             if (route[i + 1] != 0) {
                 auto& node = result.gv->getNode(to);
                 node.setColor(color);
-                node.setSize(35);
+                node.setSize(45);
                 node.setLabel(to_string(route[i + 1]));
+                node.setLabelSize(20);
                 node.enable();
             }
         }
