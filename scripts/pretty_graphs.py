@@ -1,3 +1,4 @@
+from turtle import width
 import pandas as pd, seaborn as sns, matplotlib.pyplot as plt
 from os import makedirs
 from os.path import exists
@@ -5,14 +6,14 @@ from os.path import exists
 sns.set(font_scale=1.5) # Adjust this if necessary
 
 CVRP_FILES = [
-    ('data/cvrp-benchmarks/greedy_analysis.csv',        'Greedy'),
-    ('data/cvrp-benchmarks/gts_analysis.csv',           'Tabu Search'),
+    ('data/cvrp-benchmarks/greedy_analysis.csv',        'Greedy Algorithm'),
+    ('data/cvrp-benchmarks/gts_analysis.csv',           'Granular Tabu Search'),
     ('data/cvrp-benchmarks/sa_analysis.csv',            'Simulated Annealing'),
     ('data/cvrp-benchmarks/aco_analysis.csv',           'Ant Colony Optimization'),
-    ('data/cvrp-benchmarks/clarke_wright_analysis.csv', 'Clarke Wright Savings'),
-    ('data/cvrp-benchmarks/sa_clarke_wright.csv',       'Simulated Annealing (Clarke Wright)'),
-    ('data/cvrp-benchmarks/sa_greedy.csv',              'Simulated Annealing (greedy)'),
-    ('data/cvrp-benchmarks/sa_trivial.csv',             'Simulated Annealing (trivial)'),
+    ('data/cvrp-benchmarks/clarke_wright_analysis.csv', 'Clarke-Wright Savings'),
+    ('data/cvrp-benchmarks/sa_clarke_wright.csv',       'Clarke-Wright'),
+    ('data/cvrp-benchmarks/sa_greedy.csv',              'Greedy'),
+    ('data/cvrp-benchmarks/sa_trivial.csv',             'Trivial'),
 ]
 
 def get_data() -> pd.DataFrame:
@@ -34,17 +35,18 @@ if __name__ == '__main__':
     data['time_us'] /= 1000
     data['solution_length'] /= 1000
     data = data.rename(columns={'name': 'instance'})
+    data['bar_plot_labels'] = data.apply(lambda row: f'{row.instance} ({row.num_deliveries})', axis=1)
 
-    data_full = data.copy()
+    data_sa = data.copy()
 
     sa_specific = {
-        'Simulated Annealing (Clarke Wright)',
-        'Simulated Annealing (greedy)',
-        'Simulated Annealing (trivial)'
+        'Clarke-Wright',
+        'Greedy',
+        'Trivial'
     }
 
     data = data[~data['method'].isin(sa_specific)]
-    data['bar_plot_labels'] = data.apply(lambda row: f'{row.instance} ({row.num_deliveries})', axis=1)
+    data_sa = data_sa[data_sa['method'].isin(sa_specific)]
 
     if not exists('data/pretty_graphs'):
         makedirs('data/pretty_graphs')
@@ -52,7 +54,7 @@ if __name__ == '__main__':
     figsize = (22, 11)
     i = 1
     plt.figure(figsize=figsize)
-    ax = sns.lineplot(data=data, x='num_deliveries', y='time_us', hue='method', lw=4)
+    ax = sns.lineplot(data=data, x='num_deliveries', y='time_us', hue='method', palette='husl', lw=4)
     ax.set(
         title='Total Processing Time (lower is better)',
         xlabel='Number of Delivery Locations',
@@ -63,7 +65,7 @@ if __name__ == '__main__':
 
     i += 1
     plt.figure(figsize=figsize)
-    ax = sns.lineplot(data=data, x='num_deliveries', y='time_us', hue='method', lw=4)
+    ax = sns.lineplot(data=data, x='num_deliveries', y='time_us', hue='method', palette='husl', lw=4)
     ax.set(
         title='Total Processing Time (lower is better)',
         xlabel='Number of Delivery Locations',
@@ -75,7 +77,7 @@ if __name__ == '__main__':
 
     i += 1
     plt.figure(figsize=figsize)
-    ax = sns.barplot(data=data, x='bar_plot_labels', y='solution_length', hue='method')
+    ax = sns.barplot(data=data, x='bar_plot_labels', y='solution_length', hue='method', palette='husl')
     ax.set(
         title='Total Solution Length (lower is better)',
         xlabel='CVRP Instance (Number of Deliveries)',
@@ -86,7 +88,7 @@ if __name__ == '__main__':
 
     i += 1
     plt.figure(figsize=figsize)
-    ax = sns.barplot(data=data, x='bar_plot_labels', y='num_vehicles', hue='method')
+    ax = sns.barplot(data=data, x='bar_plot_labels', y='num_vehicles', hue='method', palette='husl')
     ax.set(
         title='Number of Vehicles Used (lower is better)',
         xlabel='CVRP Instance (Number of Deliveries)',
@@ -97,13 +99,41 @@ if __name__ == '__main__':
 
     i += 1
     plt.figure(figsize=figsize)
-    ax = sns.barplot(data=data, x='bar_plot_labels', y='average_load', hue='method')
+    ax = sns.barplot(data=data, x='bar_plot_labels', y='average_load', hue='method', palette='husl')
     ax.set(
         title='Average Vehicle Load (higher is better)',
         xlabel='CVRP Instance (Number of Deliveries)',
         ylabel='Average Vehicle Load'
     )
     ax.legend(title='Method', loc='lower right')
+    plt.savefig(f'data/pretty_graphs/graph{i}.png', bbox_inches='tight')
+
+    i += 1
+    plt.figure(figsize=figsize)
+    ax = sns.barplot(data=data_sa, x='method', y='time_us', palette='husl')
+    ax.set(
+        title='Simulated Annealing - Processing Time',
+        xlabel='Initial Solution',
+        ylabel='Processing Time (ms)'
+    )
+    for bar in ax.patches:
+        center = bar.get_x() + bar.get_width() / 2
+        bar.set_width(0.5)
+        bar.set_x(center - 0.25)
+    plt.savefig(f'data/pretty_graphs/graph{i}.png', bbox_inches='tight')
+
+    i += 1
+    plt.figure(figsize=figsize)
+    ax = sns.barplot(data=data_sa, x='method', y='solution_length', palette='husl')
+    ax.set(
+        title='Simulated Annealing - Solution Length',
+        xlabel='Initial Solution',
+        ylabel='Solution Length (km)'
+    )
+    for bar in ax.patches:
+        center = bar.get_x() + bar.get_width() / 2
+        bar.set_width(0.5)
+        bar.set_x(center - 0.25)
     plt.savefig(f'data/pretty_graphs/graph{i}.png', bbox_inches='tight')
 
     instances = list(data[data['method'] == 'Greedy']['instance'])
@@ -113,7 +143,7 @@ if __name__ == '__main__':
         instance_data = data[data['instance'] == instance]
         plt.figure(figsize=figsize)
 
-        ax = sns.scatterplot(data=instance_data, x='time_us', y='solution_length', hue='method', s=200)
+        ax = sns.scatterplot(data=instance_data, x='time_us', y='solution_length', hue='method', s=200, palette='husl')
         ax.set(
             title=f'Processing Time vs. Solution Length ({instance})',
             xlabel='Processing Time (ms, log scale)',
