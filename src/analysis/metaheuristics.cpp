@@ -61,6 +61,8 @@ CvrpSolution clarkeWrightSavingsDefault(const CvrpInstance& instance) {
 
 CvrpSolution simulatedAnnealingDefault(const CvrpInstance& instance) {
     SimulatedAnnealingConfig config;
+    config.initialSolutionType = InitialSolution::CLARKE_WRIGHT;
+    config.numIters = 5'000'000;
     return simulatedAnnealing(instance, config);
 }
 
@@ -86,7 +88,7 @@ void metaheuristicComparison() {
         "aco_analysis.csv"
     };
 
-    static const array<u32, NUM_METAHEURISTICS> iterations = {1, 1, 5, 1, 1};
+    static const array<u32, NUM_METAHEURISTICS> iterations = {1, 1, 3, 1, 1};
     static array<function<CvrpSolution(const CvrpInstance&)>, NUM_METAHEURISTICS> functions = {
         greedyAlgorithmDefault,
         clarkeWrightSavingsDefault,
@@ -117,13 +119,14 @@ void metaheuristicComparison() {
 }
 
 void simulatedAnnealingAnalysis() {
-    static const char* name = "0-pa-34";
+    static const char* name = "0-pa-61";
     static const u32 iterations = 5;
 
     CvrpInstance instance = loadInstance(name);
     ofstream ofs;
     SimulatedAnnealingConfig config;
-    
+    config.numIters = 5'000'000;
+
     ofs.open("sa_trivial.csv");
     ofs << csvHeader;
     config.initialSolutionType = TRIVIAL;
