@@ -12,6 +12,6 @@ struct AntColonyConfig {
     bool useSwapHeuristic = true;
 };
 
-CvrpSolution antColonyOptimization(const CvrpInstance& instance, AntColonyConfig config);
+CvrpSolution antColonyOptimization(const CvrpInstance& instance, AntColonyConfig config, bool printLogs = false);
 
 #endif // ANT_COLONY_H

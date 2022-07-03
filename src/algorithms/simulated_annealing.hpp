@@ -10,6 +10,11 @@ enum InitialSolution {
     CLARKE_WRIGHT,
 };
 
-CvrpSolution simulatedAnnealing(const CvrpInstance& instance, InitialSolution initialSolutionType = InitialSolution::GREEDY);
+struct SimulatedAnnealingConfig {
+    InitialSolution initialSolutionType = TRIVIAL;
+    size_t numIters = 10'000'000;
+};
+
+CvrpSolution simulatedAnnealing(const CvrpInstance& instance, SimulatedAnnealingConfig config, bool printLogs = false);
 
 #endif // SIMULATED_ANNEALING_H

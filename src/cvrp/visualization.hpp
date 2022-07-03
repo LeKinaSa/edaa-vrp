@@ -26,7 +26,7 @@ struct GraphVisualizationResult {
     }
 };
 
-GraphVisualizationResult generateGraphVisualization(const OsmXmlData& data, float scale = 200000.0);
+GraphVisualizationResult* generateGraphVisualization(const OsmXmlData& data, float scale = 200000.0);
 void setGraphCenter(GraphViewer& gv, const Coordinates& coords, float scale = 200000.0);
 void showMapMatchingResults(GraphViewer& gv, const CvrpInstance& instance,
     const MapMatchingResult& result, float scale = 200000.0);

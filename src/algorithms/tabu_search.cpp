@@ -120,7 +120,7 @@ class ClarkeWrightRoute {
 
 u32 ClarkeWrightRoute::nextId = 0;
 
-CvrpSolution clarkeWrightSavings(const CvrpInstance& instance) {
+CvrpSolution clarkeWrightSavings(const CvrpInstance& instance, bool printLogs) {
     const vector<vector<double>>& distanceMatrix = instance.getDistanceMatrix();
 
     list<ClarkeWrightRoute> routes;
@@ -199,6 +199,9 @@ CvrpSolution clarkeWrightSavings(const CvrpInstance& instance) {
         convertedRoutes.push_back(route.toNodeRoute());
         length += route.getLength();
     }
+
+    if (printLogs) cout << "Clarke-Wright Savings solution has length "
+        << length / 1000.0 << ", uses " << convertedRoutes.size() << " vehicles" << endl;
 
     return { convertedRoutes, length };
 }
@@ -325,10 +328,10 @@ static mt19937 rng(rd());
 static const u32 MIN_PENALTY = 1, MAX_PENALTY = 6400, INITIAL_PENALTY = 100,
     PENALTY_UPDATE_ITERS = 10;
 
-CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIterations, double beta) {
+CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIterations, double beta, bool printLogs) {
     typedef function<void(const CvrpInstance&, TabuSearchSolution&, TabuSearchEdge&)> TabuSearchHeuristic;
 
-    CvrpSolution initialSolution = clarkeWrightSavings(instance);
+    CvrpSolution initialSolution = clarkeWrightSavings(instance, printLogs);
     const vector<vector<double>>& distanceMatrix = instance.getDistanceMatrix();
 
     auto isShort = [&beta, &instance, &initialSolution](const Edge& edge) {
@@ -344,8 +347,6 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
         bestSolution.length += routeLength;
     }
     currentSolution = bestSolution;
-
-    cout << "Clarke-Wright initial solution has length " << bestSolution.length / 1000 << "km" << endl;
 
     uniform_int_distribution<int> tenureDistribution(5, 10);
     unordered_map<Edge, u8, PairHash> tabuList;
@@ -366,7 +367,7 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
                         for (size_t idxB = 1; idxB < tsrB.route.size() - 1; ++idxB) {
                             if (isShort({tsrA.route[idxA], tsrB.route[idxB]})) {
                                 auto applyHeuristic = [&instance, &tabuList, &penalty, &iterationBest, &removedEdges,
-                                        &bestSolution, &currentSolution, &movesEvaluated, ra, rb, idxA, idxB]
+                                        &bestSolution, &currentSolution, &movesEvaluated, printLogs, ra, rb, idxA, idxB]
                                         (const TabuSearchHeuristic& heuristic) {
                                     TabuSearchSolution newSolution = currentSolution;
                                     TabuSearchEdge edge = {idxA, idxB, newSolution.routes[ra], newSolution.routes[rb]};
@@ -386,6 +387,7 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
 
                                     if (newSolution.length < bestSolution.length && newSolution.isValid(instance)) {
                                         bestSolution = newSolution;
+                                        if (printLogs) cout << "New best solution: " << bestSolution.length / 1000.0 << endl;
                                     }
 
                                     if (!tabu) {
@@ -409,6 +411,9 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
                 }
             }
         }
+
+        if (printLogs) cout << "ITERATION " << iter << ": Evaluated " << movesEvaluated
+            << " moves." << endl;
 
         if (iterationBest->isValid(instance)) ++valid;
 
@@ -445,6 +450,9 @@ CvrpSolution granularTabuSearch(const CvrpInstance& instance, size_t maxIteratio
             valid = 0;
         }
     }
+
+    if (printLogs) cout << "Final solution has length " << bestSolution.length / 1000.0 << ", uses "
+        << bestSolution.routes.size() << " vehicles." << endl;
 
     return bestSolution.toStandardForm();
 }

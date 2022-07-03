@@ -51,8 +51,19 @@ void printResults(ofstream& ofs, const string& name, const CvrpInstance& instanc
         << averageCargo << ")" << endl;
 }
 
+CvrpSolution greedyAlgorithmDefault(const CvrpInstance& instance) {
+    return greedyAlgorithm(instance);
+}
+
+CvrpSolution clarkeWrightSavingsDefault(const CvrpInstance& instance) {
+    return clarkeWrightSavings(instance);
+}
+
 CvrpSolution simulatedAnnealingDefault(const CvrpInstance& instance) {
-    return simulatedAnnealing(instance);
+    SimulatedAnnealingConfig config;
+    config.initialSolutionType = InitialSolution::CLARKE_WRIGHT;
+    config.numIters = 5'000'000;
+    return simulatedAnnealing(instance, config);
 }
 
 CvrpSolution granularTabuSearchDefault(const CvrpInstance& instance) {
@@ -77,10 +88,10 @@ void metaheuristicComparison() {
         "aco_analysis.csv"
     };
 
-    static const array<u32, NUM_METAHEURISTICS> iterations = {1, 1, 5, 1, 1};
+    static const array<u32, NUM_METAHEURISTICS> iterations = {1, 1, 3, 1, 1};
     static array<function<CvrpSolution(const CvrpInstance&)>, NUM_METAHEURISTICS> functions = {
-        greedyAlgorithm,
-        clarkeWrightSavings,
+        greedyAlgorithmDefault,
+        clarkeWrightSavingsDefault,
         simulatedAnnealingDefault,
         granularTabuSearchDefault,
         antColonyOptimizationDefault,
@@ -108,17 +119,20 @@ void metaheuristicComparison() {
 }
 
 void simulatedAnnealingAnalysis() {
-    static const char* name = "0-pa-34";
+    static const char* name = "0-pa-61";
     static const u32 iterations = 5;
 
     CvrpInstance instance = loadInstance(name);
     ofstream ofs;
-    
+    SimulatedAnnealingConfig config;
+    config.numIters = 5'000'000;
+
     ofs.open("sa_trivial.csv");
     ofs << csvHeader;
+    config.initialSolutionType = TRIVIAL;
     for (size_t i = 0; i < iterations; ++i) {
         auto start = high_resolution_clock::now();
-        CvrpSolution solution = simulatedAnnealing(instance, TRIVIAL);
+        CvrpSolution solution = simulatedAnnealing(instance, config);
         auto end = high_resolution_clock::now();
         printResults(ofs, name, instance, solution, interval<chrono::microseconds>(start, end));
     }
@@ -126,9 +140,10 @@ void simulatedAnnealingAnalysis() {
 
     ofs.open("sa_greedy.csv");
     ofs << csvHeader;
+    config.initialSolutionType = GREEDY;
     for (size_t i = 0; i < iterations; ++i) {
         auto start = high_resolution_clock::now();
-        CvrpSolution solution = simulatedAnnealing(instance, GREEDY);
+        CvrpSolution solution = simulatedAnnealing(instance, config);
         auto end = high_resolution_clock::now();
         printResults(ofs, name, instance, solution, interval<chrono::microseconds>(start, end));
     }
@@ -136,9 +151,10 @@ void simulatedAnnealingAnalysis() {
 
     ofs.open("sa_clarke_wright.csv");
     ofs << csvHeader;
+    config.initialSolutionType = CLARKE_WRIGHT;
     for (size_t i = 0; i < iterations; ++i) {
         auto start = high_resolution_clock::now();
-        CvrpSolution solution = simulatedAnnealing(instance, CLARKE_WRIGHT);
+        CvrpSolution solution = simulatedAnnealing(instance, config);
         auto end = high_resolution_clock::now();
         printResults(ofs, name, instance, solution, interval<chrono::microseconds>(start, end));
     }

@@ -13,7 +13,7 @@ using namespace std;
 static random_device rd;
 static mt19937 rng(rd());
 
-CvrpSolution antColonyOptimization(const CvrpInstance& instance, AntColonyConfig config) {
+CvrpSolution antColonyOptimization(const CvrpInstance& instance, AntColonyConfig config, bool printLogs) {
     CvrpSolution bestSolution = { {}, numeric_limits<double>::max() };
 
     const vector<CvrpDelivery>& deliveries = instance.getDeliveries();
@@ -149,6 +149,8 @@ CvrpSolution antColonyOptimization(const CvrpInstance& instance, AntColonyConfig
 
             if (solution.length < bestSolution.length) {
                 bestSolution = solution;
+                if (printLogs) cout << "New best solution: "
+                    << bestSolution.length / 1000.0 << endl;
             }
 
             if (config.eliteAnts == 0) {
@@ -182,6 +184,9 @@ CvrpSolution antColonyOptimization(const CvrpInstance& instance, AntColonyConfig
             }
         }
     }
+
+    if (printLogs) cout << "Final solution has length " << bestSolution.length / 1000.0 << ", uses "
+        << bestSolution.routes.size() << " vehicles." << endl;
 
     return bestSolution;
 }
