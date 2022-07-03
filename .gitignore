@@ -50,5 +50,8 @@ build/*
 
 *.xml
 *.json
+*.png
+*.txt
+*.pyc
 
 scripts/**/*.txt
